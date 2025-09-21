@@ -41,7 +41,6 @@ DEFAULT_NOTIFIER_CMD = os.environ.get(
     "NOTIFIER_CMD",
     "/Applications/terminal-notifier.app/Contents/MacOS/terminal-notifier",
 )
-DEFAULT_SOUND = os.environ.get("SOUND", "glass")
 
 
 class Notifier:
@@ -66,20 +65,22 @@ class Notifier:
 
         self.terminal_notifier = cmd_path
 
-    def _notify_terminal(
-        self, *, title: str, message: str, status: str | None
-    ) -> None:
+    def _notify_terminal(self, *, title: str, message: str, status: str | None) -> None:
         args = [
             self.terminal_notifier,
             "-title",
             title,
             "-message",
-            message,
+            "✅" if status == "succeeded" else "⚠️" + " " + message,
             "-activate",
-            "com.apple.Safari",
+            "com.microsoft.VSCode",
         ]
-        if status:
-            args.extend(["-subtitle", status])
+
+        if status == "failed":
+            self.sound = "basso"
+
+        # if status:
+        #     args.extend(["-subtitle", status])
         if self.sound:
             args.extend(["-sound", self.sound])
         try:
@@ -155,9 +156,7 @@ class Listener:
     def serve_forever(self) -> None:
         self._handle_signals()
 
-        print(
-            f"Listening on {self.bind_ip}:{self.port} — title='{self.notifier.default_title}'  (Ctrl+C to stop)"
-        )
+        print(f"Listening on {self.bind_ip}:{self.port} — title='{self.notifier.default_title}'  (Ctrl+C to stop)")
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as srv:
             self._server_sock = srv
@@ -204,7 +203,7 @@ def main() -> None:
     notifier = Notifier(
         title=DEFAULT_TITLE,
         notifier_cmd=DEFAULT_NOTIFIER_CMD,
-        sound=(DEFAULT_SOUND if DEFAULT_SOUND != "" else None),
+        sound="glass",
     )
     listener = Listener(
         bind_ip=DEFAULT_BIND_IP,
