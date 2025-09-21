@@ -21,18 +21,17 @@ Usage:
 from __future__ import annotations
 
 import os
+import shutil
 import signal
 import socket
+import subprocess
 import sys
 import time
-import shutil
-import subprocess
 from pathlib import Path
-
 
 DEFAULT_PORT = 7777
 DEFAULT_BIND_IP = os.environ.get("BIND_IP", "127.0.0.1")
-DEFAULT_TITLE = os.environ.get("TITLE", "notify")
+DEFAULT_TITLE = os.environ.get("TITLE", "AI Agent")
 DEFAULT_LOG_FILE = os.environ.get("LOG_FILE", str(Path.home() / ".notify.log"))
 DEFAULT_NOTIFIER_CMD = os.environ.get(
     "NOTIFIER_CMD",
@@ -45,7 +44,6 @@ class Notifier:
     def __init__(self, title: str, notifier_cmd: str, sound: str | None):
         self.title = title
         self.sound = sound
-        self.use_terminal_notifier = False
 
         # Determine availability of terminal-notifier; respect explicit paths and PATH lookup
         cmd_path = None
@@ -55,22 +53,17 @@ class Notifier:
             else:
                 cmd_path = shutil.which(notifier_cmd)
 
-        if cmd_path:
-            self.use_terminal_notifier = True
-            self.terminal_notifier = cmd_path
-        else:
-            # Fallback to osascript
-            osa = shutil.which("osascript")
-            if not osa:
-                sys.stderr.write(
-                    "Need either terminal-notifier or osascript available on macOS.\n"
-                )
-                sys.exit(1)
-            self.terminal_notifier = None
-            self.osascript = osa
+        if not cmd_path:
+            resolved_cmd = notifier_cmd or "terminal-notifier"
+            sys.stderr.write(
+                f"terminal-notifier not found (looked for '{resolved_cmd}'). Install terminal-notifier and try again.\n"
+            )
+            sys.exit(1)
+
+        self.terminal_notifier = cmd_path
 
     def _notify_terminal(self, message: str) -> None:
-        args = [self.terminal_notifier, "-title", self.title, "-message", message, "-appIcon", "../media/code-icon.svg"]
+        args = [self.terminal_notifier, "-title", self.title, "-message", message, "-activate", "com.apple.Safari"]
         if self.sound:
             args.extend(["-sound", self.sound])
         try:
@@ -79,26 +72,8 @@ class Notifier:
             # Swallow notification errors to keep listener alive
             pass
 
-    @staticmethod
-    def _escape_applescript(s: str) -> str:
-        # Basic escaping for AppleScript string literal
-        return s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
-
-    def _notify_osascript(self, message: str) -> None:
-        script = (
-            f'display notification "{self._escape_applescript(message)}" '
-            f'with title "{self._escape_applescript(self.title)}"'
-        )
-        try:
-            subprocess.run([self.osascript, "-e", script], check=False)
-        except Exception:
-            pass
-
     def notify(self, message: str) -> None:
-        if self.use_terminal_notifier:
-            self._notify_terminal(message)
-        else:
-            self._notify_osascript(message)
+        self._notify_terminal(message)
 
 
 class Listener:
@@ -144,9 +119,7 @@ class Listener:
         self._setup_logging()
         self._handle_signals()
 
-        print(
-            f"Listening on {self.bind_ip}:{self.port} — title='{self.notifier.title}'  (Ctrl+C to stop)"
-        )
+        print(f"Listening on {self.bind_ip}:{self.port} — title='{self.notifier.title}'  (Ctrl+C to stop)")
         print(f"Logging to: {self.log_file}")
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as srv:
@@ -204,4 +177,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
