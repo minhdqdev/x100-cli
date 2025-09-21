@@ -13,8 +13,8 @@ Environment variables (all optional):
 - SOUND: Sound name for terminal-notifier (default: default; empty to disable)
 
 Usage:
-  python3 scripts/notify_listener.py [PORT]
-  ./scripts/notify_listener.py [PORT]
+  python3 scripts/notify_listener.py [--speak] [PORT]
+  ./scripts/notify_listener.py [--speak] [PORT]
 
 Input format (one JSON object per line):
   {
@@ -45,9 +45,10 @@ DEFAULT_NOTIFIER_CMD = os.environ.get(
 
 
 class Notifier:
-    def __init__(self, title: str, notifier_cmd: str, sound: str | None):
+    def __init__(self, title: str, notifier_cmd: str, sound: str | None, speak: bool = False):
         self.default_title = title
         self.sound = sound
+        self.speak = speak
 
         # Determine availability of terminal-notifier; respect explicit paths and PATH lookup
         cmd_path = None
@@ -72,7 +73,7 @@ class Notifier:
             "-title",
             title,
             "-message",
-            "✅" if status == "succeeded" else "⚠️" + " " + message,
+            ("✅" if status == "succeeded" else "⚠️") + " " + message,
             "-activate",
             "com.microsoft.VSCode",
         ]
@@ -90,6 +91,14 @@ class Notifier:
             # Swallow notification errors to keep listener alive
             pass
 
+    def _speak(self, message: str) -> None:
+        # Attempt to use macOS 'say' to speak the message; ignore failures
+        say_cmd = shutil.which("say") or "/usr/bin/say"
+        try:
+            subprocess.run([say_cmd, message], check=False)
+        except Exception:
+            pass
+
     def notify(
         self,
         *,
@@ -99,13 +108,16 @@ class Notifier:
     ) -> None:
         resolved_title = title or self.default_title
         self._notify_terminal(title=resolved_title, message=message, status=status)
+        if self.speak:
+            self._speak(message)
 
 
 class Listener:
-    def __init__(self, bind_ip: str, port: int, notifier: Notifier):
+    def __init__(self, bind_ip: str, port: int, notifier: Notifier, close_after_message: bool = True):
         self.bind_ip = bind_ip
         self.port = port
         self.notifier = notifier
+        self.close_after_message = close_after_message
         self._shutdown = False
         self._server_sock: socket.socket | None = None
         self._active_conn: socket.socket | None = None
@@ -201,6 +213,9 @@ class Listener:
                                 continue
                             message, title, status = parsed
                             self.notifier.notify(message=message, title=title, status=status)
+                            # Close connection after handling one message so clients like `nc` exit.
+                            if self.close_after_message:
+                                break
                     finally:
                         with contextlib.suppress(Exception):
                             fileobj.close()
@@ -208,30 +223,54 @@ class Listener:
             self._server_sock = None
 
 
-def parse_port(argv: list[str]) -> int:
-    if len(argv) >= 2 and argv[1]:
+def parse_args(argv: list[str]) -> tuple[int, bool]:
+    """Parse command-line args: [--speak] [PORT].
+
+    Returns (port, speak)
+    """
+    speak = False
+    port: int | None = None
+    remaining: list[str] = []
+
+    for a in argv[1:]:
+        if a == "--speak":
+            speak = True
+        elif a.startswith("-"):
+            sys.stderr.write(f"Unknown option: {a}\n")
+            sys.exit(2)
+        else:
+            remaining.append(a)
+
+    if remaining:
+        candidate = remaining[0]
         try:
-            p = int(argv[1])
+            p = int(candidate)
             if p <= 0 or p > 65535:
                 raise ValueError
-            return p
+            port = p
         except ValueError:
-            sys.stderr.write(f"Invalid port: {argv[1]}\n")
+            sys.stderr.write(f"Invalid port: {candidate}\n")
             sys.exit(2)
-    return DEFAULT_PORT
+
+    if port is None:
+        port = DEFAULT_PORT
+
+    return port, speak
 
 
 def main() -> None:
-    port = parse_port(sys.argv)
+    port, speak = parse_args(sys.argv)
     notifier = Notifier(
         title=DEFAULT_TITLE,
         notifier_cmd=DEFAULT_NOTIFIER_CMD,
         sound="glass",
+        speak=speak,
     )
     listener = Listener(
         bind_ip=DEFAULT_BIND_IP,
         port=port,
         notifier=notifier,
+        close_after_message=(os.environ.get("CLOSE_AFTER_MESSAGE", "1").lower() not in {"0", "false", "no"}),
     )
     listener.serve_forever()
 
