@@ -26,6 +26,7 @@ Input format (one JSON object per line):
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import shutil
@@ -107,6 +108,7 @@ class Listener:
         self.notifier = notifier
         self._shutdown = False
         self._server_sock: socket.socket | None = None
+        self._active_conn: socket.socket | None = None
 
     @staticmethod
     def _parse_payload(raw: str) -> tuple[str, str | None, str | None] | None:
@@ -144,11 +146,16 @@ class Listener:
             # Print a newline for nicer Ctrl+C UX, match shell script behavior
             print("\nShutting down listener...")
             self._shutdown = True
-            try:
-                if self._server_sock:
+            if self._server_sock:
+                with contextlib.suppress(Exception):
                     self._server_sock.close()
-            except Exception:
-                pass
+                self._server_sock = None
+            if self._active_conn:
+                with contextlib.suppress(Exception):
+                    self._active_conn.shutdown(socket.SHUT_RDWR)
+                with contextlib.suppress(Exception):
+                    self._active_conn.close()
+                self._active_conn = None
 
         for sig in (signal.SIGINT, signal.SIGTERM):
             signal.signal(sig, handler)
@@ -163,26 +170,42 @@ class Listener:
             srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             srv.bind((self.bind_ip, self.port))
             srv.listen(5)
+            srv.settimeout(1.0)
             while not self._shutdown:
                 try:
                     conn, addr = srv.accept()
+                except socket.timeout:
+                    continue
                 except OSError:
                     # Likely closed during shutdown
+                    if self._shutdown:
+                        break
                     break
                 with conn:
+                    self._active_conn = conn
                     try:
                         fileobj = conn.makefile("r", encoding="utf-8", errors="replace")
                     except Exception:
+                        self._active_conn = None
                         continue
-                    for raw in fileobj:
-                        line = raw.strip()
-                        if not line:
-                            continue
-                        parsed = self._parse_payload(line)
-                        if not parsed:
-                            continue
-                        message, title, status = parsed
-                        self.notifier.notify(message=message, title=title, status=status)
+                    try:
+                        while not self._shutdown:
+                            raw = fileobj.readline()
+                            if not raw:
+                                break
+                            line = raw.strip()
+                            if not line:
+                                continue
+                            parsed = self._parse_payload(line)
+                            if not parsed:
+                                continue
+                            message, title, status = parsed
+                            self.notifier.notify(message=message, title=title, status=status)
+                    finally:
+                        with contextlib.suppress(Exception):
+                            fileobj.close()
+                        self._active_conn = None
+            self._server_sock = None
 
 
 def parse_port(argv: list[str]) -> int:
