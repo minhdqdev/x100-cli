@@ -71,7 +71,7 @@ class Notifier:
             "-title",
             title,
             "-message",
-            ("✅" if status == "succeeded" else "⚠️") + " " + message,
+            ("✅" if status != "failed" else "⚠️") + " " + message,
             "-activate",
             "com.microsoft.VSCode",
         ]
