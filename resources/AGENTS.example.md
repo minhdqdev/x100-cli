@@ -1,10 +1,6 @@
 # AI Agent Environment Guide
 
-## Project Snapshot
-
-- **Name:** [PROJECT_NAME]
-- **Stack:** [TECH_STACK]
-- **Key docs:** `README.md`, `docs/PRD.md`, `docs/PRODUCT_BACKLOG.md`, `docs/user-stories/`, `.x100/resources/references/TECHNICAL_GUIDELINE.md`
+**Key docs:** `docs/PROJECT_CONTEXT.md`, `README.md`, `docs/PRD.md`, `docs/PRODUCT_BACKLOG.md`, `docs/user-stories/`, `.x100/resources/references/TECHNICAL_GUIDELINE.md`
 
 ### Shared Tooling
 
@@ -27,7 +23,8 @@ Use this workflow for coding, bug fixes, and documentation tasks.
    Run lint/test commands for touched areas. Update docs & telemetry checklists when needed.
 5. **Document**
    Update comments section in user story file to brief what was done technically.
-   Update `docs/AGENT_CHANGELOG.md`, `docs/PRODUCT_BACKLOG.md` and relevant docs.
+   Update `docs/PRODUCT_BACKLOG.md` and relevant docs.
+   Append change(s) to `docs/AGENT_CHANGELOG.md`
 
 ### Test
 
