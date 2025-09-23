@@ -37,15 +37,20 @@
 
 A starter blueprint for new and existing projects, built to speed up dev workflows—especially when wiring up AI agents with spec-driven development.
 
+## Features
 
-## ⚡️ Get started 
+- Interactive CLI tool - `x100` to manage project lifecycle and AI agents
+  - Notification tooling with `notify.sh` and macOS listener
+- Pre-configured prompts and context for AI agents (Claude Code, OpenAI Codex, Gemini CLI, GitHub Copilot, Cursor)
+
+## ⚡️ Get started
 
 ### 🔧 Prerequisites
 
 - **Linux/macOS** (or WSL2 on Windows)
 - **AI coding agent**: [OpenAI Codex](https://openai.com/codex/), [Claude Code](https://www.anthropic.com/claude-code), [GitHub Copilot](https://code.visualstudio.com/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), or [Cursor](https://cursor.sh/)
-<!-- - [uv](https://docs.astral.sh/uv/) for package management -->
-<!-- - [Python 3.11+](https://www.python.org/downloads/) -->
+  <!-- - [uv](https://docs.astral.sh/uv/) for package management -->
+  <!-- - [Python 3.11+](https://www.python.org/downloads/) -->
 - Basic familiarity with [Git](https://git-scm.com/downloads) and Git submodules
 - Basic familiarity with Markdown, and shell scripting
 
@@ -69,7 +74,6 @@ If your project uses Git, you may want to add this template as a submodule for y
 ```bash
 git submodule add -b <branch_name> <repo_url> .x100
 ```
-
 
 That's it! You can now start defining your project idea in `docs/IDEA.md` and use the AI agent commands to generate refined ideas, PRDs, implementation plans, code, and tests.
 
@@ -99,32 +103,34 @@ your-project-name/
 └── ...
 ```
 
-
 ## Use the template
 
 For AI agent commands, refer to the command files in `.x100/.claude/commands/` (for Claude Code and OpenAI Codex), `.x100/.copilot/commands/` (for GitHub Copilot), `.x100/.gemini/commands/` (for Gemini CLI)
 
 ### Refine your idea
+
 1. Define your project idea in `docs/IDEA.md`.
 2. Use AI agent command: `/refine-idea`
 3. Review and edit the refined idea in `docs/REFINED_IDEA.md`
 
 ### From refined idea to PRD
+
 1. Use AI agent command: `/generate-prd`
 2. Review and edit the generated PRD in `docs/PRD.md`
 
 ### From PRD to product backlog
+
 1. Use AI agent command: `/generate-product-backlog`
 2. Review and edit the generated product backlog in `docs/PRODUCT_BACKLOG.md`
 
 ### From product backlog to user stories
+
 1. Use AI agent command: `/generate-user-stories`
 2. Review and edit the generated user stories in `docs/user-stories/US-<ID>.md`
 
 ### From implementation plan to code
+
 1. Use AI agent to read the user stories and complete the tasks.
-
-
 
 ## 📚 Core philosophy
 
@@ -141,10 +147,11 @@ For AI agent commands, refer to the command files in `.x100/.claude/commands/` (
   - Read more in [here](https://agents.md)
 
 ## 👥 Maintainers
+
 - Minh Dang Quang ([@minhdqdev](https://github.com/minhdqdev))
 
-
 ## 🤝 Contributing
+
 If you have integrated this template into your project, please consider contributing back any improvements to the original [x100-template](https://github.com/minhdqdev/x100-template). We have provided a very convenient way to help you do so, just run:
 
 ```bash
@@ -155,11 +162,9 @@ You need to install `gh` CLI and authenticate it with your GitHub account first.
 
 Read more in the [Contributing Guide](./.github/CONTRIBUTING.md).
 
-
 ## 💬 Support
 
 For support, please open a [GitHub issue](https://github.com/minhdqdev/x100-template/issues/new). We welcome bug reports, feature requests, and questions about using the template.
-
 
 ## 📄 License
 

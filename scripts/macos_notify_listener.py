@@ -10,7 +10,6 @@ Environment variables (all optional):
 - TITLE: Notification title (default: AI Agent)
 - NOTIFIER_CMD: Path to terminal-notifier binary
   (default: /Applications/terminal-notifier.app/Contents/MacOS/terminal-notifier)
-- SOUND: Sound name for terminal-notifier (default: default; empty to disable)
 
 Usage:
   python3 scripts/notify_listener.py [--speak] [PORT]
@@ -45,9 +44,8 @@ DEFAULT_NOTIFIER_CMD = os.environ.get(
 
 
 class Notifier:
-    def __init__(self, title: str, notifier_cmd: str, sound: str | None, speak: bool = False):
+    def __init__(self, title: str, notifier_cmd: str, speak: bool = False):
         self.default_title = title
-        self.sound = sound
         self.speak = speak
 
         # Determine availability of terminal-notifier; respect explicit paths and PATH lookup
@@ -73,18 +71,13 @@ class Notifier:
             "-title",
             title,
             "-message",
-            ("✅" if status == "succeeded" else "⚠️") + " " + message,
+            ("✅" if status != "failed" else "⚠️") + " " + message,
             "-activate",
             "com.microsoft.VSCode",
         ]
 
-        if status == "failed":
-            self.sound = "basso"
+        args.extend(["-sound", "glass" if status == "succeeded" else "basso"])
 
-        # if status:
-        #     args.extend(["-subtitle", status])
-        if self.sound:
-            args.extend(["-sound", self.sound])
         try:
             subprocess.run(args, check=False)
         except Exception:
@@ -263,7 +256,6 @@ def main() -> None:
     notifier = Notifier(
         title=DEFAULT_TITLE,
         notifier_cmd=DEFAULT_NOTIFIER_CMD,
-        sound="glass",
         speak=speak,
     )
     listener = Listener(
