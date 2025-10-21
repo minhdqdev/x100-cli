@@ -11,7 +11,7 @@
 
 ### Executing project tasks
 
-Use this workflow for coding, bug fixes, and documentation tasks.
+Use this workflow only when user ask to implement US or Epic.
 
 1. **Understand context**
    Read PRD, Technical Guideline, relevant docs, and codebase.
