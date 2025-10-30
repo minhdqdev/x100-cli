@@ -295,7 +295,7 @@ def setup_ai_agent() -> None:
     elif choices[idx] == "Gemini CLI":
         overwrite_agents_md("Gemini CLI")
     elif choices[idx] == "OpenAI Codex":
-        setup_openai_codex()
+        overwrite_agents_md("OpenAI Codex")
     elif choices[idx] == "Exit":
         return
     else:
@@ -360,126 +360,10 @@ def overwrite_agents_md(provider: str) -> None:
         if not os.path.exists(src):
             print(f"{RED}Missing resource:{RESET} {src}")
         else:
-            if os.path.exists(dst):
-                print(f"AGENTS.md already exists at {dst}")
-                if not prompt_yes_no(f"Overwrite AGENTS.md with template for {provider}?", default=False):
-                    print(f"{YELLOW}Skipped.{RESET} Existing AGENTS.md preserved.")
-                    input("Press Enter to return to menu…")
-                    return
             shutil.copyfile(src, dst)
             print(f"{GREEN}OVERWROTE{RESET} AGENTS.md using template for {provider}: {dst}")
     except Exception as e:
         print(f"{RED}ERROR{RESET} Overwriting AGENTS.md failed: {e}")
-    input("Press Enter to return to menu…")
-
-
-def setup_openai_codex() -> None:
-    """Setup flow for OpenAI Codex.
-
-    - Prompt before overwriting AGENTS.md using template
-    - Ensure ~/.codex/config.toml exists
-    - On non-Windows only: ensure notify hook is configured; prompt to append if missing
-      and install a notify script to ~/bin/notify.sh with chmod +x
-    """
-    # 1) Prompt + overwrite AGENTS.md via template
-    src = os.path.join(TOOL_ROOT, "resources", "AGENTS.example.md")
-    dst = os.path.join(OUTER_DIR, "AGENTS.md")
-    if not os.path.exists(src):
-        print(f"{RED}Missing resource:{RESET} {src}")
-    else:
-        do_overwrite = True
-        if os.path.exists(dst):
-            do_overwrite = prompt_yes_no(
-                "Overwrite AGENTS.md with template for OpenAI Codex?",
-                default=False,
-            )
-        if do_overwrite:
-            try:
-                shutil.copyfile(src, dst)
-                print(f"{GREEN}UPDATED{RESET} {dst}")
-            except Exception as e:
-                print(f"{RED}ERROR{RESET} Overwriting AGENTS.md failed: {e}")
-        else:
-            print(f"{YELLOW}Skipped.{RESET} Existing AGENTS.md preserved.")
-
-    # 2) Ensure ~/.codex/config.toml exists
-    cfg_dir = os.path.expanduser("~/.codex")
-    cfg_path = os.path.join(cfg_dir, "config.toml")
-    try:
-        os.makedirs(cfg_dir, exist_ok=True)
-        if not os.path.exists(cfg_path):
-            with open(cfg_path, "w", encoding="utf-8") as f:
-                f.write("\n")
-            print(f"{GREEN}CREATED{RESET} {cfg_path}")
-        else:
-            print(f"{GREEN}OK{RESET}      Found {cfg_path}")
-    except Exception as e:
-        print(f"{RED}ERROR{RESET} Preparing {cfg_path} failed: {e}")
-
-    # 3) Check/append notify option (non-Windows only)
-    if os.name == "nt" or sys.platform.startswith("win"):
-        print(f"{YELLOW}Note:{RESET} Skipping notify hook setup on Windows.")
-    else:
-        try:
-            with open(cfg_path, "r", encoding="utf-8") as f:
-                cfg_contents = f.read()
-        except Exception as e:
-            print(f"{RED}ERROR{RESET} Reading {cfg_path} failed: {e}")
-            input("Press Enter to return to menu…")
-            return
-
-        notify_target = os.path.expanduser("~/bin/notify.sh")
-        expected_line = f'notify = ["bash", "{notify_target}"]'
-
-        if expected_line in cfg_contents:
-            print(f"{GREEN}OK{RESET}      Notify hook already configured in {cfg_path}")
-            input("Press Enter to return to menu…")
-            return
-
-        if prompt_yes_no(
-            f"Append notify hook to {cfg_path}?\n  -> {expected_line}",
-            default=True,
-        ):
-            # Attempt to install the notify script
-            try:
-                os.makedirs(os.path.dirname(notify_target), exist_ok=True)
-                # Prefer project scripts/notify.sh; fallback to .x100/scripts/notify.sh
-                src_notify_primary = os.path.join(OUTER_DIR, "scripts", "notify.sh")
-                src_notify_fallback = os.path.join(TOOL_ROOT, "scripts", "notify.sh")
-                src_notify = None
-                if os.path.exists(src_notify_primary):
-                    src_notify = src_notify_primary
-                elif os.path.exists(src_notify_fallback):
-                    src_notify = src_notify_fallback
-
-                if src_notify is None:
-                    print(
-                        f"{YELLOW}Note:{RESET} notify.sh not found in 'scripts/' or '.x100/scripts/'. Skipping file copy."
-                    )
-                else:
-                    shutil.copyfile(src_notify, notify_target)
-                    try:
-                        mode = os.stat(notify_target).st_mode
-                        os.chmod(notify_target, mode | 0o111)
-                    except Exception:
-                        pass
-                    print(f"{GREEN}INSTALLED{RESET} {notify_target}")
-
-                # Append the line to config.toml (ensure trailing newline)
-                try:
-                    needs_nl = not cfg_contents.endswith("\n")
-                    with open(cfg_path, "a", encoding="utf-8") as f:
-                        if needs_nl:
-                            f.write("\n")
-                        f.write(expected_line + "\n")
-                    print(f"{GREEN}UPDATED{RESET} {cfg_path} (notify hook appended)")
-                except Exception as e:
-                    print(f"{RED}ERROR{RESET} Appending notify hook failed: {e}")
-            except Exception as e:
-                print(f"{YELLOW}Note:{RESET} Could not install notify script: {e}")
-        else:
-            print(f"{YELLOW}Skipped.{RESET} Notify hook not added.")
-
     input("Press Enter to return to menu…")
 
 
@@ -511,7 +395,7 @@ def verify() -> None:
 
     # 3) Check required items in outer directory
     required_items = [
-        ("dir", "submodules"),
+        ("dir", "src"),
         ("dir", "docs"),
         ("file", "README.md"),
         ("file", "AGENTS.md"),
@@ -545,7 +429,7 @@ def init_project(wait_for_key: bool = True) -> None:
     print(f"{BOLD}Initializing Project Structure{RESET}\n")
 
     # Ensure directories
-    for dname in ["submodules", "docs", "tests", "scripts"]:
+    for dname in ["src", "docs", "tests", "scripts"]:
         path = os.path.join(outer_dir, dname)
         if not os.path.isdir(path):
             os.makedirs(path, exist_ok=True)

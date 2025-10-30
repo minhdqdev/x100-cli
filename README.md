@@ -37,12 +37,6 @@
 
 A starter blueprint for new and existing projects, built to speed up dev workflows—especially when wiring up AI agents with spec-driven development.
 
-## Features
-
-- Interactive CLI tool - `x100` to manage project lifecycle and AI agents
-  - Notification tooling with `notify.sh` and macOS listener
-- Pre-configured prompts and context for AI agents (Claude Code, OpenAI Codex, Gemini CLI, GitHub Copilot, Cursor)
-
 ## ⚡️ Get started
 
 ### 🔧 Prerequisites
@@ -95,7 +89,7 @@ your-project-name/
 │   ├── scripts/
 │   ├── config.json
 │   └── ...
-├── submodules/
+├── src/
 │   ├── frontend/
 │   └── backend/
 │   └── ...
