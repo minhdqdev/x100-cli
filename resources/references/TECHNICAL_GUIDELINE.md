@@ -16,7 +16,7 @@ This guideline helps SA and DEV choose consistent defaults for software product.
 
 ### 3.1 Repository layout
 
-- Default: manage backend and frontend as Git submodules under `submodules/backend/` and `submodules/frontend/` to allow independent release cadences while keeping the integration repo slim.
+- Default: manage backend and frontend as Git submodules under `src/backend/` and `src/frontend/` to allow independent release cadences while keeping the integration repo slim.
 - Alternative: a monorepo is acceptable when both stacks share release cadence and tooling; document the rationale in an ADR and ensure build pipelines remain isolated per component.
 - Avoid mixing unrelated prototypes or throwaway code inside production repositories.
 
@@ -43,7 +43,6 @@ This guideline helps SA and DEV choose consistent defaults for software product.
 - Each submodule should have an `__init__.py` file to mark it as a package.
 - Models should be defined in `core/models.py` or `core/models/` if complex.
 - Views should be in `core/views.py` or `core/views/` if complex.
-- Avoid using Django's generic views (`ListCreateAPIView`, `RetrieveUpdateDestroyAPIView`, etc.), model view sets. Prefer explicit `APIView` subclasses for better control over validation, serialization, and pagination.
 - Serializers should be in `core/serializers.py` or `core/serializers/` if complex.
 - Utility functions should be in `core/utils.py` or `core/utils/` if complex.
 - Avoid deeply nested packages; flatten the structure when possible to reduce import complexity.

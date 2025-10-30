@@ -1,17 +1,21 @@
 # AI Agent Environment Guide
 
-**Key docs:** `docs/PROJECT_CONTEXT.md`, `README.md`, `docs/PRD.md`, `docs/PRODUCT_BACKLOG.md`, `docs/user-stories/`, `.x100/resources/references/TECHNICAL_GUIDELINE.md`
+## Project Snapshot
+
+- **Name:** [PROJECT_NAME]
+- **Stack:** [TECH_STACK]
+- **Key docs:** `README.md`, `docs/PRD.md`, `docs/PRODUCT_BACKLOG.md`, `docs/user-stories/`, `.x100/resources/references/TECHNICAL_GUIDELINE.md`
 
 ### Shared Tooling
 
-- Docker compose services under `submodules/*/deploys/`
+- Docker compose services under `src/*/deploys/`
 - Always ensure docs/ artifacts stay consistent (PRD → Backlog → Stories)
 
 ## Instructions for Agents
 
 ### Executing project tasks
 
-Use this workflow only when user ask to implement US or Epic.
+Use this workflow for coding, bug fixes, and documentation tasks.
 
 1. **Understand context**
    Read PRD, Technical Guideline, relevant docs, and codebase.
@@ -23,8 +27,7 @@ Use this workflow only when user ask to implement US or Epic.
    Run lint/test commands for touched areas. Update docs & telemetry checklists when needed.
 5. **Document**
    Update comments section in user story file to brief what was done technically.
-   Update `docs/PRODUCT_BACKLOG.md` and relevant docs.
-   Append change(s) to `docs/AGENT_CHANGELOG.md`
+   Update `docs/CHANGELOG.md`, `docs/PRODUCT_BACKLOG.md`
 
 ### Test
 
@@ -42,4 +45,4 @@ Use this workflow only when user requests testing.
    Read PRD, Technical Guideline, relevant docs, and codebase.
 2. Identify outdated or missing documentation.
 3. Suggest updates or new docs, adhering to templates in `.x100/resources/doc-templates/`.
-4. Update `docs/AGENT_CHANGELOG.md` and relevant docs.
+4. Update `docs/CHANGELOG.md` and relevant docs.
