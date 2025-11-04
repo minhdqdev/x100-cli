@@ -58,12 +58,11 @@ Enhanced `src/main.py` với **300+ lines code mới**:
 
 ### 4. **Complete Documentation**
 
-- ✅ **GETTING_STARTED.md** - Quick start trong 5 phút
+- ✅ **README.md** - Updated với workflow sections và quick start (merged from GETTING_STARTED.md)
 - ✅ **SETUP.md** - Complete setup guide với troubleshooting
 - ✅ **resources/WORKFLOW.md** - Full workflow documentation (40+ pages)
 - ✅ **resources/WORKFLOW_QUICKSTART.md** - Workflow basics với cheat sheet
 - ✅ **WORKFLOW_IMPLEMENTATION.md** - Technical implementation details
-- ✅ **README.md** - Updated với workflow sections
 
 ### 5. **Integration Ready**
 
@@ -161,8 +160,8 @@ chmod +x .x100/x100
 - `resources/claude/available-agents/test-writer.md`
 - `resources/claude/available-agents/workflow-orchestrator.md`
 
-**Documentation (6 files):**
-- `GETTING_STARTED.md` - Quick start guide
+**Documentation (5 files):**
+- `README.md` - Overview + quick start guide (merged from GETTING_STARTED.md)
 - `SETUP.md` - Complete setup instructions
 - `resources/WORKFLOW.md` - Full workflow guide (40+ pages)
 - `resources/WORKFLOW_QUICKSTART.md` - Quick reference
@@ -234,9 +233,8 @@ chmod +x .x100/x100
 
 ```
 x100-template/
-├── GETTING_STARTED.md              ← Quick start (5 phút)
+├── README.md                       ← Overview + quick start (5 phút)
 ├── SETUP.md                        ← Complete setup guide
-├── README.md                       ← Overview + quick links
 ├── WORKFLOW_IMPLEMENTATION.md      ← Technical details
 ├── IMPLEMENTATION_COMPLETE.md      ← This file (summary)
 └── resources/
@@ -245,7 +243,7 @@ x100-template/
 ```
 
 **Reading Order:**
-1. **First time**: GETTING_STARTED.md → Try `/workflow`
+1. **First time**: README.md → Try `/workflow`
 2. **Need details**: SETUP.md
 3. **Learn workflow**: WORKFLOW_QUICKSTART.md
 4. **Deep dive**: WORKFLOW.md
@@ -293,7 +291,7 @@ x100-template/
 
 ### Immediate (First 10 minutes)
 
-1. ✅ Đọc GETTING_STARTED.md
+1. ✅ Đọc README.md (quick start section)
 2. ✅ Run setup (3 commands)
 3. ✅ Thử `/workflow` với sample user story
 4. ✅ Explore commands với `/` trong Claude Code

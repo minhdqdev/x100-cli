@@ -40,7 +40,6 @@ A starter blueprint for new and existing projects, built to speed up dev workflo
 **NEW:** ✨ Complete workflow automation system with commands & agents for Claude Code!
 
 📚 **Quick Links:**
-- **[Getting Started](./GETTING_STARTED.md)** - Setup trong 5 phút
 - **[Setup Guide](./SETUP.md)** - Hướng dẫn chi tiết
 - **[Workflow Quick Start](./resources/WORKFLOW_QUICKSTART.md)** - Workflow basics
 - **[Workflow Guide](./resources/WORKFLOW.md)** - Complete workflow documentation
@@ -58,7 +57,7 @@ A starter blueprint for new and existing projects, built to speed up dev workflo
 - **Git** installed
 - Basic familiarity with Markdown and shell scripting
 
-### Quick Start for New Users
+### Quick Start (5 minutes)
 
 **First time using x100?** Start here:
 
@@ -73,8 +72,14 @@ chmod +x .x100/x100
 ./.x100/x100  # Select "Setup AI Agent" → "Claude Code"
 ./.x100/x100 workflow-enable
 
-# 3. Done! See GETTING_STARTED.md for next steps
+# 3. Test with example feature (in Claude Code)
+/workflow docs/user-stories/US-001-example-feature.md
 ```
+
+**Troubleshooting:**
+- `uv not found`: `brew install uv` (macOS) or `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- Commands not showing: `./x100 workflow-enable` and restart Claude Code
+- Permission denied: `chmod +x .x100/x100`
 
 ### Setup Options for Your Project
 
@@ -170,17 +175,37 @@ x100 includes a complete workflow automation system. See [Workflow Quick Start](
 ```
 
 **Available workflow commands:**
-- `/start` - Start feature development from user story
-- `/spec` - Create technical specification
-- `/code` - Implement code from spec
-- `/test` - Create and run tests
-- `/review` - Comprehensive code review
-- `/done` - Complete feature and commit
-- `/workflow` - Run complete automated workflow
+
+| Command | Description |
+|---------|-------------|
+| `/start` | Start feature development from user story |
+| `/spec` | Create technical specification |
+| `/code` | Implement code from spec |
+| `/test` | Create and run tests |
+| `/review` | Comprehensive code review |
+| `/done` | Complete feature and commit |
+| `/workflow` | **Full automation** - runs all steps above |
 
 **Step-by-step workflow:**
 ```
 /start US-001 → /code → /test → /review → /done
+```
+
+**Examples:**
+```bash
+# Full automation
+/workflow docs/user-stories/US-002-your-feature.md
+
+# Quick bug fix
+/code "Fix authentication timeout bug"
+/test
+/review
+/done "fix: resolve auth timeout issue"
+
+# After manual coding
+/review
+/test
+/done
 ```
 
 For detailed workflow guide, see [resources/WORKFLOW.md](./resources/WORKFLOW.md)

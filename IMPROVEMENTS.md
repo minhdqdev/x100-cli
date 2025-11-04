@@ -14,7 +14,7 @@ Based on review from a new developer's perspective, these improvements were made
 
 **Fixed in:**
 - `README.md` - All workflow links
-- `GETTING_STARTED.md` - All documentation links
+- `GETTING_STARTED.md` - All documentation links (now merged into README.md)
 - Added note about path changes when integrated
 
 **Impact:** Devs can now follow links immediately after cloning

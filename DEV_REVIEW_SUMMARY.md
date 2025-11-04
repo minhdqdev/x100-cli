@@ -28,7 +28,7 @@
 
 **Files Fixed:**
 - `README.md` - 6 links fixed
-- `GETTING_STARTED.md` - 3 links fixed
+- `GETTING_STARTED.md` - 3 links fixed (now merged into README.md)
 
 ---
 
@@ -113,7 +113,7 @@ After setup, dev doesn't know if it worked.
 
 ### 7. **Example Numbering Issues**
 
-GETTING_STARTED.md had duplicate "Ví dụ 2".
+GETTING_STARTED.md had duplicate "Ví dụ 2" (now merged into README.md).
 
 **Fixed:** Corrected to 1, 2, 3, 4.
 
