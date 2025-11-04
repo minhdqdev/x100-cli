@@ -1,12 +1,12 @@
 # Dev Review Summary - x100 Template
 
-Đánh giá từ góc độ một developer mới clone repo về và đọc từ đầu.
+Review from the perspective of a developer who just cloned the repo and read it from the beginning.
 
 ## 🎯 Review Scenario
 
-**Situation:** Dev mới clone `x100-template` về, mở README.md và bắt đầu đọc.
+**Situation:** Developer just cloned `x100-template`, opened README.md and started reading.
 
-**Goal:** Understand workflow và bắt đầu sử dụng trong 10-15 phút.
+**Goal:** Understand workflow and start using it within 10-15 minutes.
 
 ## 🔴 Critical Issues Found & Fixed
 
@@ -18,7 +18,7 @@
    → 404 when viewing repo directly
 ```
 
-**Why:** Repo khi clone về là `x100-template/`, không phải `.x100/`. Path `./.x100/` chỉ tồn tại sau khi integrate vào project khác.
+**Why:** When cloned, the repo is `x100-template/`, not `.x100/`. The path `./.x100/` only exists after integrating into another project.
 
 **Fixed:**
 ```markdown
@@ -113,7 +113,7 @@ After setup, dev doesn't know if it worked.
 
 ### 7. **Example Numbering Issues**
 
-GETTING_STARTED.md had duplicate "Ví dụ 2" (now merged into README.md).
+GETTING_STARTED.md had duplicate "Example 2" (now merged into README.md).
 
 **Fixed:** Corrected to 1, 2, 3, 4.
 
