@@ -40,7 +40,7 @@ A starter blueprint for new and existing projects, built to speed up dev workflo
 **NEW:** ✨ Complete workflow automation system with commands & agents for Claude Code!
 
 📚 **Quick Links:**
-- **[Setup Guide](./SETUP.md)** - Hướng dẫn chi tiết
+- **[Setup Guide](./SETUP.md)** - Detailed guide
 - **[Workflow Quick Start](./resources/WORKFLOW_QUICKSTART.md)** - Workflow basics
 - **[Workflow Guide](./resources/WORKFLOW.md)** - Complete workflow documentation
 
