@@ -37,21 +37,55 @@
 
 A starter blueprint for new and existing projects, built to speed up dev workflows—especially when wiring up AI agents with spec-driven development.
 
+**NEW:** ✨ Complete workflow automation system with commands & agents for Claude Code!
+
+📚 **Quick Links:**
+- **[Setup Guide](./SETUP.md)** - Detailed guide
+- **[Workflow Quick Start](./resources/WORKFLOW_QUICKSTART.md)** - Workflow basics
+- **[Workflow Guide](./resources/WORKFLOW.md)** - Complete workflow documentation
+
+> **Note:** When integrated into your project as `.x100/`, these paths will be `.x100/resources/...`
+
 
 ## ⚡️ Get started 
 
 ### 🔧 Prerequisites
 
 - **Linux/macOS** (or WSL2 on Windows)
-- **AI coding agent**: [OpenAI Codex](https://openai.com/codex/), [Claude Code](https://www.anthropic.com/claude-code), [GitHub Copilot](https://code.visualstudio.com/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), or [Cursor](https://cursor.sh/)
-<!-- - [uv](https://docs.astral.sh/uv/) for package management -->
-<!-- - [Python 3.11+](https://www.python.org/downloads/) -->
-- Basic familiarity with [Git](https://git-scm.com/downloads) and Git submodules
-- Basic familiarity with Markdown, and shell scripting
+- **Claude Code** (recommended) or other AI coding agents: [OpenAI Codex](https://openai.com/codex/), [GitHub Copilot](https://code.visualstudio.com/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), or [Cursor](https://cursor.sh/)
+- **[uv](https://docs.astral.sh/uv/)** for Python package management - Install: `brew install uv` (macOS) or `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- **Git** installed
+- Basic familiarity with Markdown and shell scripting
 
-Now you may want to set up your project using one of the following options:
+### Quick Start (5 minutes)
 
-### Option 1: Bootstrap a project from scratch
+**First time using x100?** Start here:
+
+```bash
+# 1. Try it out in a test directory
+mkdir x100-test && cd x100-test
+git clone https://github.com/minhdqdev/x100-template.git .x100
+chmod +x .x100/x100
+./.x100/x100 init
+
+# 2. Setup Claude Code and enable workflow
+./.x100/x100  # Select "Setup AI Agent" → "Claude Code"
+./.x100/x100 workflow-enable
+
+# 3. Test with example feature (in Claude Code)
+/workflow docs/user-stories/US-001-example-feature.md
+```
+
+**Troubleshooting:**
+- `uv not found`: `brew install uv` (macOS) or `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- Commands not showing: `./x100 workflow-enable` and restart Claude Code
+- Permission denied: `chmod +x .x100/x100`
+
+### Setup Options for Your Project
+
+Choose one of the following based on your needs:
+
+#### Option 1: Bootstrap a new project
 
 ```bash
 cd your-project-name
@@ -102,27 +136,120 @@ your-project-name/
 
 ## Use the template
 
-For AI agent commands, refer to the command files in `.x100/.claude/commands/` (for Claude Code and OpenAI Codex), `.x100/.copilot/commands/` (for GitHub Copilot), `.x100/.gemini/commands/` (for Gemini CLI)
+### Setup for Claude Code
 
-### Refine your idea
+After initializing the project, setup Claude Code integration:
+
+```bash
+# Run x100 setup tool
+./x100
+
+# Select "Setup AI Agent" → "Claude Code"
+# This will copy commands and agents to .claude/ directory
+
+# Enable workflow automation (recommended)
+./x100 workflow-enable
+```
+
+Or use CLI commands directly:
+
+```bash
+# Setup Claude Code
+./x100  # Select option 3 "Setup AI Agent" → "Claude Code"
+
+# Enable workflow automation
+./x100 workflow-enable
+```
+
+### Workflow Automation (Recommended)
+
+x100 includes a complete workflow automation system. See [Workflow Quick Start](./resources/WORKFLOW_QUICKSTART.md).
+
+**Quick Start:**
+```bash
+# Enable workflow
+./x100 workflow-enable
+
+# In Claude Code, run complete workflow
+/workflow docs/user-stories/US-001-feature.md
+```
+
+**Available workflow commands:**
+
+| Command | Description |
+|---------|-------------|
+| `/start` | Start feature development from user story |
+| `/spec` | Create technical specification |
+| `/code` | Implement code from spec |
+| `/test` | Create and run tests |
+| `/review` | Comprehensive code review |
+| `/done` | Complete feature and commit |
+| `/workflow` | **Full automation** - runs all steps above |
+
+**Step-by-step workflow:**
+```
+/start US-001 → /code → /test → /review → /done
+```
+
+**Examples:**
+```bash
+# Full automation
+/workflow docs/user-stories/US-002-your-feature.md
+
+# Quick bug fix
+/code "Fix authentication timeout bug"
+/test
+/review
+/done "fix: resolve auth timeout issue"
+
+# After manual coding
+/review
+/test
+/done
+```
+
+For detailed workflow guide, see [resources/WORKFLOW.md](./resources/WORKFLOW.md)
+
+### Traditional Approach (Idea → PRD → User Stories)
+
+#### Refine your idea
 1. Define your project idea in `docs/IDEA.md`.
 2. Use AI agent command: `/refine-idea`
 3. Review and edit the refined idea in `docs/REFINED_IDEA.md`
 
-### From refined idea to PRD
+#### From refined idea to PRD
 1. Use AI agent command: `/generate-prd`
 2. Review and edit the generated PRD in `docs/PRD.md`
 
-### From PRD to product backlog
+#### From PRD to product backlog
 1. Use AI agent command: `/generate-product-backlog`
 2. Review and edit the generated product backlog in `docs/PRODUCT_BACKLOG.md`
 
-### From product backlog to user stories
+#### From product backlog to user stories
 1. Use AI agent command: `/generate-user-stories`
 2. Review and edit the generated user stories in `docs/user-stories/US-<ID>.md`
 
-### From implementation plan to code
-1. Use AI agent to read the user stories and complete the tasks.
+#### From user stories to code
+Use the workflow automation (recommended) or manually implement:
+1. Use `/workflow` for full automation
+2. Or use step-by-step: `/start` → `/code` → `/test` → `/review` → `/done`
+
+### Managing Commands & Agents
+
+```bash
+# List available commands and agents
+./x100 command list
+./x100 agent list
+
+# Enable/disable specific items
+./x100 command enable <name>
+./x100 command disable <name>
+./x100 agent enable <name>
+./x100 agent disable <name>
+
+# Interactive management
+./x100  # Select "Manage Commands" or "Manage Agents"
+```
 
 
 
