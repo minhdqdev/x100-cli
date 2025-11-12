@@ -642,6 +642,334 @@ def menu_loop(options: List[str], actions: List[Callable[[], None]]) -> None:
             exit_app()
 
 
+def list_available_commands() -> None:
+    """List all available commands that can be enabled."""
+    available_dir = os.path.join(TOOL_ROOT, "resources", "claude", "available-commands")
+    active_dir = os.path.join(OUTER_DIR, ".claude", "commands")
+
+    print(f"{BOLD}Available Commands{RESET}\n")
+
+    if not os.path.exists(available_dir):
+        print(f"{RED}ERROR{RESET} Available commands directory not found: {available_dir}")
+        input("Press Enter to continue…")
+        return
+
+    available_files = [f for f in os.listdir(available_dir) if f.endswith('.md')]
+    active_files = []
+    if os.path.exists(active_dir):
+        active_files = [f for f in os.listdir(active_dir) if f.endswith('.md')]
+
+    for filename in sorted(available_files):
+        name = filename[:-3]  # remove .md
+        status = f"{GREEN}[ACTIVE]{RESET}" if filename in active_files else f"{DIM}[available]{RESET}"
+
+        # Try to read description from frontmatter
+        filepath = os.path.join(available_dir, filename)
+        description = ""
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+                if len(lines) > 1 and lines[0].strip() == '---':
+                    for i, line in enumerate(lines[1:], 1):
+                        if line.strip() == '---':
+                            break
+                        if line.startswith('description:'):
+                            description = line.split(':', 1)[1].strip()
+                            break
+        except Exception:
+            pass
+
+        print(f"  {status} /{name}")
+        if description:
+            print(f"      {DIM}{description}{RESET}")
+
+    print()
+    input("Press Enter to return to menu…")
+
+
+def list_available_agents() -> None:
+    """List all available agents that can be enabled."""
+    available_dir = os.path.join(TOOL_ROOT, "resources", "claude", "available-agents")
+    active_dir = os.path.join(OUTER_DIR, ".claude", "agents")
+
+    print(f"{BOLD}Available Agents{RESET}\n")
+
+    if not os.path.exists(available_dir):
+        print(f"{RED}ERROR{RESET} Available agents directory not found: {available_dir}")
+        input("Press Enter to continue…")
+        return
+
+    available_files = [f for f in os.listdir(available_dir) if f.endswith('.md')]
+    active_files = []
+    if os.path.exists(active_dir):
+        active_files = [f for f in os.listdir(active_dir) if f.endswith('.md')]
+
+    for filename in sorted(available_files):
+        name = filename[:-3]  # remove .md
+        status = f"{GREEN}[ACTIVE]{RESET}" if filename in active_files else f"{DIM}[available]{RESET}"
+
+        # Try to read description from frontmatter
+        filepath = os.path.join(available_dir, filename)
+        description = ""
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = f.read()
+                if content.startswith('---'):
+                    end_idx = content.find('---', 3)
+                    if end_idx > 0:
+                        frontmatter = content[3:end_idx]
+                        for line in frontmatter.split('\n'):
+                            if line.startswith('name:'):
+                                name = line.split(':', 1)[1].strip()
+                            elif line.startswith('description:'):
+                                desc_line = line.split(':', 1)[1].strip()
+                                # Get first sentence or first 80 chars
+                                if len(desc_line) > 80:
+                                    description = desc_line[:80] + "..."
+                                else:
+                                    description = desc_line.split('.')[0] + '.' if '.' in desc_line else desc_line
+        except Exception:
+            pass
+
+        print(f"  {status} {name}")
+        if description:
+            print(f"      {DIM}{description}{RESET}")
+
+    print()
+    input("Press Enter to return to menu…")
+
+
+def enable_command(command_name: str = None) -> None:
+    """Enable a command by copying from available-commands to .claude/commands."""
+    available_dir = os.path.join(TOOL_ROOT, "resources", "claude", "available-commands")
+    active_dir = os.path.join(OUTER_DIR, ".claude", "commands")
+
+    os.makedirs(active_dir, exist_ok=True)
+
+    if not command_name:
+        # Interactive selection
+        available_files = [f[:-3] for f in os.listdir(available_dir) if f.endswith('.md')]
+        if not available_files:
+            print(f"{RED}No commands available to enable{RESET}")
+            input("Press Enter to return…")
+            return
+
+        idx = interactive_select("Select command to enable:", available_files, default_index=0)
+        if idx is None:
+            return
+        command_name = available_files[idx]
+
+    src = os.path.join(available_dir, f"{command_name}.md")
+    dst = os.path.join(active_dir, f"{command_name}.md")
+
+    if not os.path.exists(src):
+        print(f"{RED}ERROR{RESET} Command not found: {command_name}")
+        input("Press Enter to return…")
+        return
+
+    shutil.copy2(src, dst)
+    print(f"{GREEN}ENABLED{RESET} Command: /{command_name}")
+    print(f"  → {dst}")
+    input("Press Enter to return to menu…")
+
+
+def disable_command(command_name: str = None) -> None:
+    """Disable a command by removing it from .claude/commands."""
+    active_dir = os.path.join(OUTER_DIR, ".claude", "commands")
+
+    if not os.path.exists(active_dir):
+        print(f"{RED}ERROR{RESET} Commands directory not found: {active_dir}")
+        input("Press Enter to return…")
+        return
+
+    if not command_name:
+        # Interactive selection
+        active_files = [f[:-3] for f in os.listdir(active_dir) if f.endswith('.md')]
+        if not active_files:
+            print(f"{YELLOW}No commands are currently active{RESET}")
+            input("Press Enter to return…")
+            return
+
+        idx = interactive_select("Select command to disable:", active_files, default_index=0)
+        if idx is None:
+            return
+        command_name = active_files[idx]
+
+    dst = os.path.join(active_dir, f"{command_name}.md")
+
+    if not os.path.exists(dst):
+        print(f"{RED}ERROR{RESET} Command not active: {command_name}")
+        input("Press Enter to return…")
+        return
+
+    if prompt_yes_no(f"Disable command /{command_name}?", default=False):
+        os.remove(dst)
+        print(f"{YELLOW}DISABLED{RESET} Command: /{command_name}")
+    else:
+        print(f"{DIM}Cancelled{RESET}")
+
+    input("Press Enter to return to menu…")
+
+
+def enable_agent(agent_name: str = None) -> None:
+    """Enable an agent by copying from available-agents to .claude/agents."""
+    available_dir = os.path.join(TOOL_ROOT, "resources", "claude", "available-agents")
+    active_dir = os.path.join(OUTER_DIR, ".claude", "agents")
+
+    os.makedirs(active_dir, exist_ok=True)
+
+    if not agent_name:
+        # Interactive selection
+        available_files = [f[:-3] for f in os.listdir(available_dir) if f.endswith('.md')]
+        if not available_files:
+            print(f"{RED}No agents available to enable{RESET}")
+            input("Press Enter to return…")
+            return
+
+        idx = interactive_select("Select agent to enable:", available_files, default_index=0)
+        if idx is None:
+            return
+        agent_name = available_files[idx]
+
+    src = os.path.join(available_dir, f"{agent_name}.md")
+    dst = os.path.join(active_dir, f"{agent_name}.md")
+
+    if not os.path.exists(src):
+        print(f"{RED}ERROR{RESET} Agent not found: {agent_name}")
+        input("Press Enter to return…")
+        return
+
+    shutil.copy2(src, dst)
+    print(f"{GREEN}ENABLED{RESET} Agent: {agent_name}")
+    print(f"  → {dst}")
+    input("Press Enter to return to menu…")
+
+
+def disable_agent(agent_name: str = None) -> None:
+    """Disable an agent by removing it from .claude/agents."""
+    active_dir = os.path.join(OUTER_DIR, ".claude", "agents")
+
+    if not os.path.exists(active_dir):
+        print(f"{RED}ERROR{RESET} Agents directory not found: {active_dir}")
+        input("Press Enter to return…")
+        return
+
+    if not agent_name:
+        # Interactive selection
+        active_files = [f[:-3] for f in os.listdir(active_dir) if f.endswith('.md')]
+        if not active_files:
+            print(f"{YELLOW}No agents are currently active{RESET}")
+            input("Press Enter to return…")
+            return
+
+        idx = interactive_select("Select agent to disable:", active_files, default_index=0)
+        if idx is None:
+            return
+        agent_name = active_files[idx]
+
+    dst = os.path.join(active_dir, f"{agent_name}.md")
+
+    if not os.path.exists(dst):
+        print(f"{RED}ERROR{RESET} Agent not active: {agent_name}")
+        input("Press Enter to return…")
+        return
+
+    if prompt_yes_no(f"Disable agent {agent_name}?", default=False):
+        os.remove(dst)
+        print(f"{YELLOW}DISABLED{RESET} Agent: {agent_name}")
+    else:
+        print(f"{DIM}Cancelled{RESET}")
+
+    input("Press Enter to return to menu…")
+
+
+def manage_commands() -> None:
+    """Interactive menu for managing commands."""
+    while True:
+        choices = [
+            "List all commands",
+            "Enable command",
+            "Disable command",
+            "Back to main menu",
+        ]
+        idx = interactive_select("Manage Commands", choices, default_index=0)
+        if idx is None or choices[idx] == "Back to main menu":
+            return
+
+        clear_screen()
+        if choices[idx] == "List all commands":
+            list_available_commands()
+        elif choices[idx] == "Enable command":
+            enable_command()
+        elif choices[idx] == "Disable command":
+            disable_command()
+
+
+def manage_agents() -> None:
+    """Interactive menu for managing agents."""
+    while True:
+        choices = [
+            "List all agents",
+            "Enable agent",
+            "Disable agent",
+            "Back to main menu",
+        ]
+        idx = interactive_select("Manage Agents", choices, default_index=0)
+        if idx is None or choices[idx] == "Back to main menu":
+            return
+
+        clear_screen()
+        if choices[idx] == "List all agents":
+            list_available_agents()
+        elif choices[idx] == "Enable agent":
+            enable_agent()
+        elif choices[idx] == "Disable agent":
+            disable_agent()
+
+
+def enable_workflow() -> None:
+    """Enable all workflow-related commands and agents."""
+    print(f"{BOLD}Enabling Workflow Automation{RESET}\n")
+
+    # Enable workflow commands
+    workflow_commands = ["start", "spec", "code", "review", "test", "done", "workflow"]
+    print("Enabling workflow commands:")
+    for cmd in workflow_commands:
+        src = os.path.join(TOOL_ROOT, "resources", "claude", "available-commands", f"{cmd}.md")
+        dst = os.path.join(OUTER_DIR, ".claude", "commands", f"{cmd}.md")
+        if os.path.exists(src):
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy2(src, dst)
+            print(f"  {GREEN}✓{RESET} /{cmd}")
+        else:
+            print(f"  {RED}✗{RESET} /{cmd} (not found)")
+
+    # Enable workflow agents
+    workflow_agents = ["spec-writer", "code-implementer", "test-writer", "workflow-orchestrator"]
+    print("\nEnabling workflow agents:")
+    for agent in workflow_agents:
+        src = os.path.join(TOOL_ROOT, "resources", "claude", "available-agents", f"{agent}.md")
+        dst = os.path.join(OUTER_DIR, ".claude", "agents", f"{agent}.md")
+        if os.path.exists(src):
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy2(src, dst)
+            print(f"  {GREEN}✓{RESET} {agent}")
+        else:
+            print(f"  {RED}✗{RESET} {agent} (not found)")
+
+    print(f"\n{GREEN}Workflow automation enabled!{RESET}")
+    print("\nYou can now use:")
+    print("  /start   - Start feature development")
+    print("  /spec    - Create technical spec")
+    print("  /code    - Implement code")
+    print("  /review  - Review code")
+    print("  /test    - Create and run tests")
+    print("  /done    - Complete feature")
+    print("  /workflow - Run complete workflow")
+
+    input("\nPress Enter to return to menu…")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="x100", add_help=True)
     sub = parser.add_subparsers(dest="command")
@@ -656,6 +984,27 @@ def build_parser() -> argparse.ArgumentParser:
 
     # verify (optional convenience)
     sub.add_parser("verify", help="Run environment checks")
+
+    # command management
+    cmd_parser = sub.add_parser("command", help="Manage Claude Code commands")
+    cmd_sub = cmd_parser.add_subparsers(dest="subcommand")
+    cmd_sub.add_parser("list", help="List all available commands")
+    enable_cmd = cmd_sub.add_parser("enable", help="Enable a command")
+    enable_cmd.add_argument("name", nargs="?", help="Command name to enable")
+    disable_cmd = cmd_sub.add_parser("disable", help="Disable a command")
+    disable_cmd.add_argument("name", nargs="?", help="Command name to disable")
+
+    # agent management
+    agent_parser = sub.add_parser("agent", help="Manage Claude Code agents")
+    agent_sub = agent_parser.add_subparsers(dest="subcommand")
+    agent_sub.add_parser("list", help="List all available agents")
+    enable_agent_cmd = agent_sub.add_parser("enable", help="Enable an agent")
+    enable_agent_cmd.add_argument("name", nargs="?", help="Agent name to enable")
+    disable_agent_cmd = agent_sub.add_parser("disable", help="Disable an agent")
+    disable_agent_cmd.add_argument("name", nargs="?", help="Agent name to disable")
+
+    # workflow
+    sub.add_parser("workflow-enable", help="Enable all workflow commands and agents")
 
     return parser
 
@@ -677,10 +1026,45 @@ def main() -> None:
         verify()
         return
 
+    # Command management
+    if args.command == "command":
+        clear_screen()
+        if args.subcommand == "list":
+            list_available_commands()
+        elif args.subcommand == "enable":
+            enable_command(getattr(args, 'name', None))
+        elif args.subcommand == "disable":
+            disable_command(getattr(args, 'name', None))
+        else:
+            manage_commands()
+        return
+
+    # Agent management
+    if args.command == "agent":
+        clear_screen()
+        if args.subcommand == "list":
+            list_available_agents()
+        elif args.subcommand == "enable":
+            enable_agent(getattr(args, 'name', None))
+        elif args.subcommand == "disable":
+            disable_agent(getattr(args, 'name', None))
+        else:
+            manage_agents()
+        return
+
+    # Workflow enable
+    if args.command == "workflow-enable":
+        clear_screen()
+        enable_workflow()
+        return
+
     options = [
         "Init project",
         "Setup VSCode",
         "Setup AI Agent",
+        "Manage Commands",
+        "Manage Agents",
+        "Enable Workflow",
         "Verify",
         "Exit",
     ]
@@ -688,6 +1072,9 @@ def main() -> None:
         init_project,
         setup_vscode,
         setup_ai_agent,
+        manage_commands,
+        manage_agents,
+        enable_workflow,
         verify,
         exit_app,
     ]

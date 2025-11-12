@@ -1,117 +1,97 @@
-# Product Requirements Document (SA-Ready)
+# Product Requirements Document — Startup Edition
 
-## 1. Overview
-**Context:**  
-**Proposed solution:**  
-**Differentiation / why now:**
+> **Ultra-Lean Mode (<5 people):** Use sections 0-4 + 9 only. Skip 5-8 or write brief bullets.  
+> **Standard Mode:** Fill all sections, but write `N/A` with rationale if not relevant.  
+> **Tip:** Link to supporting docs (Figma, Loom, ADRs) instead of duplicating content.
 
-## 2. Goals & Non-Goals
-**Primary outcome:**  
-**Key success metrics (KPIs):**  
-- Metric 1: definition + data source
-- Metric 2: definition + data source  
-**Non-goals / out of scope:**
+## 0. Quick Snapshot
+| Item | Details |
+| --- | --- |
+| DRI / Date |  |
+| Team members involved |  |
+| Problem statement (1–2 sentences) |  |
+| Hypothesis / why now |  |
+| Success signal (what we expect to happen) |  |
 
-## 3. Users & Stories
-**Target users / early adopters:**  
-**User stories:** in `docs/user-stories/`  
-- Mark **architecturally significant** stories with `ASR:` and include acceptance criteria.
+## 1. Customer Problem & Opportunity
+- **Customer / segment:** who experiences the pain?  
+- **Evidence:** key data points, research, user quotes, support volume, etc.  
+- **Pain today:** what breaks, how big is the impact, frequency.  
+- **Opportunity / business impact:** revenue, retention, cost, strategic bet.  
+- **Assumptions to validate:** primary unknowns or leaps of faith.
 
-## 4. Scope
-**Must-have (MVP):**  
-- [ ]  
-**Nice-to-have (Future):**  
-- [ ]  
-**Anti-features (explicitly NOT doing):**  
-- [ ]
+## 2. Goals, Outcomes & Metrics
+| Metric (KPI) | Baseline | Target | Measurement source & frequency |
+| --- | --- | --- | --- |
+| e.g., Activation rate | 32% | 45% within 2 months | Amplitude dashboard `#123` (weekly) |
 
-## 5. Requirements
-**Functional (what it should do):**  
-- [ ]  
-- [ ]  
-- [ ]  
+> Include at least one leading metric (customer behavior) and one lagging metric (business impact). Define how success/failure is declared.
 
-**Non-functional (constraints):**  
-- Platform support: ☐ mobile web ☐ desktop ☐ APIs  
-- Security: ☐ SSO/OIDC ☐ MFA ☐ RBAC  
-- Privacy & data residency: __  
-- Performance & capacity: target RPS __, p95 latency __ms, max objects/day __  
-- Availability & resilience: target __%, RTO __, RPO __  
-- Cost ceiling / unit economics: __/MAU or __/tx
+## 3. Users & Journeys
+> **Small team tip:** If you're building for yourselves or know users intimately, brief bullets suffice. Skip formal personas.
 
-## 6. Architecture Drivers
-- Business constraints: __
-- Quality attribute priorities (rank): performance, availability, security, cost, maintainability, portability (edit order)
-- Compliance: ☐ GDPR ☐ PDPA (SG) ☐ VN PDPD ☐ PCI DSS ☐ HIPAA ☐ other: __
+- **Target users:** who they are, their goal, key motivation.  
+- **Secondary users / blockers:** anyone who can veto or needs special consideration.  
+- **Core journeys:** list 2–3 most important flows with happy path + acceptance criteria.
 
-## 7. System Architecture (C4)
-- **Context (L1):** link diagram
-- **Containers (L2):** services + responsibilities
-- **Components (L3):** key modules, boundaries
-- **Deployment view:** regions, envs (dev/stg/prod), tenancy model, infra as code link
+| Journey | Trigger & goal | Acceptance criteria | Notes |
+| --- | --- | --- | --- |
+|  |  |  |  |
 
-## 8. Data Model & Lifecycle
-- Core entities & relationships (ERD link)
-- Data classification: ☐ Public ☐ Internal ☐ PII ☐ Sensitive
-- Retention & deletion: __; legal holds: __
-- Backups & recovery: schedule __; encryption at rest ☐; keys in __
+## 4. Scope & Requirements
+### Prioritized backlog (MoSCoW or RICE order)
+| Priority | Description | Acceptance criteria / tests | DRI | Effort |
+| --- | --- | --- | --- | --- |
+| Must |  |  |  |  |
+| Should |  |  |  |  |
+| Could |  |  |  |  |
 
-## 9. Interfaces & Integrations
-- **Inbound APIs:** versioning, auth, rate limits, error model
-- **Outbound calls:** systems, SLAs, timeouts, retries, circuit breakers
-- **Events/Queues:** topics, schemas, ordering/idempotency policy, DLQ
-- **Data contracts:** schema registry link; change policy
+- **Non-goals / explicitly out of scope:** list to avoid scope creep.
+- **Open questions:** call out unknowns blocking commitment.
 
-## 10. Capacity, Performance & Resilience
-- Traffic model: peak RPS __, concurrency __, data size/day __
-- Scaling strategy: ☐ HPA ☐ shards ☐ partitions; backpressure strategy: __
-- Availability design: redundancy zones __; graceful degradation plan
-- DR: active-active/active-passive; failover steps; RTO/RPO targets
+## 5. Solution Outline
+> **Ultra-lean:** Brief bullets or links only. Skip if obvious.
 
-## 11. Security & Threat Model
-- AuthN/AuthZ: OIDC provider, roles/permissions
-- Secrets: storage __; rotation policy __
-- Threats & mitigations (STRIDE summary): __
-- Audit logging requirements: __
+- **Product experience:** short narrative or bullets; link to wireframes, demos.  
+- **System approach:** describe key approach, reference diagrams or sketches.  
+- **Data impact:** new entities or changes; link to ERD if relevant.  
+- **Alternatives considered:** why this option wins (optional for small teams).  
+- **Impact radius:** feature flags, migrations, users affected.
 
-## 12. Observability & Ops
-- Metrics (SLIs): latency, availability, saturation, errors
-- Dashboards/alerts: links; paging policy & runbooks
-- Logging/tracing: correlation IDs, retention
-- Feature flags & config strategy; migration/backfill plan
+## 6. Implementation & Quality Notes
+> **Small team tip (<10 people):** Keep brief or skip. Write N/A for sections that don't apply yet.
 
-## 13. Testing & Quality
-- Test strategy: unit / contract / e2e / performance / security / chaos
-- Staging parity & test data mgmt
-- Acceptance criteria linkage to stories
+- **Architecture highlights:** key components, APIs, infrastructure changes.  
+- **Dependencies:** external services, 3rd parties, other features.  
+- **Performance & cost:** any targets or constraints worth noting.  
+- **Security & privacy:** sensitive data handling, auth changes, compliance (if relevant).  
+- **Monitoring:** key metrics or alerts to add (skip detailed runbooks unless critical).
 
-## 14. Rollout & Change Management
-- Release plan: ☐ canary ☐ blue-green ☐ feature flags
-- Rollback triggers & procedure
-- Versioning & deprecation policy
-- Migration steps (schema, data, clients)
+## 7. Testing & Rollout
+> **Small team tip:** Merge with section 8 if you have simple release process.
 
-## 15. Risks, Assumptions, Decisions
-- **Assumptions to validate:**  
-- **Top risks & mitigations:**  
-- **ADR index:** `/docs/adrs/` (1-line per decision: context → choice → consequence)
+- **Test approach:** unit, integration, manual testing plan; beta users if applicable.  
+- **Test data / environments:** staging setup, feature flags, test accounts.  
+- **Rollback plan:** what signals "stop" and how to revert quickly.
 
-## 16. Timeline & Milestones
-- MVP target date: __
-- Milestone 2: __ (e.g., first 100 users, investor demo)
-- Critical path & dependencies: __
+## 8. Launch Plan
+> **Small team tip:** Simple timeline + communication plan is often enough.
 
-## 17. Open Questions & Owner
-- Q1: __ (Owner: __, Due: __)
-- Q2: __ (Owner: __, Due: __)
+| Milestone | DRI | Target date | Notes |
+| --- | --- | --- | --- |
+| MVP ready |  |  |  |
+| Beta / internal testing |  |  |  |
+| Public launch |  |  |  |
 
-## 18. Appendices
-- Glossary, references, Figma, runbooks, IaC repo, OKR link
+- **Release approach:** all-at-once, phased rollout, or feature flag.  
+- **User communication:** who needs to know, how to announce, docs to update.  
+- **Post-launch:** what to track, when to review results (1 week? 1 month?).
 
+## 9. Risks, Mitigations & Decisions
+- **Top risks:** list severity + mitigation / contingency.  
+- **Critical assumptions:** how and when they will be validated.  
+- **Key decisions & status:** maintain a mini-ADR table (link to `/docs/adrs/` if formal).
 
-## 19. One-Pager (for Solutions Architect)
-- Problem & outcome (2–3 lines):
-- Architecturally Significant Requirements (ASRs): ☐ scale ☐ security ☐ data integrity ☐ low latency ☐ compliance ☐ cost
-- NFR targets (SLO/SLI): p95 latency __ms | availability __% | error rate __% | throughput __/s | durability __ | RTO __ | RPO __
-- Constraints (hard): budget __, time __, tech/infra __, data residency __
-- Go/No-Go criteria for MVP:
+## 10. Appendices & Links
+- Glossary, analytics dashboards, Figma boards, Looms, backlog link, experiment plan.  
+- **Skipped sections:** Note which sections you skipped and why (e.g., "Skipped formal personas—we're building for ourselves").

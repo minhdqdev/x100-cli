@@ -6,11 +6,94 @@ This guideline helps SA and DEV choose consistent defaults for software product.
 
 ## 2. Architectural Principles
 
+- **Follow Twelve-Factor App methodology**: Build apps that are portable, cloud-native, and maintainable. See [twelve-factor app principles](#21-twelve-factor-app-principles) below for implementation details.
 - Start simple: favour modular monolith or service-oriented designs before introducing microservices or event-driven architecture.
 - Make domain boundaries explicit through well-defined modules, APIs, and shared contracts.
 - Prefer convention over configuration: adopt mature frameworks and tooling rather than bespoke glue code.
 - Automate from the outset: tests, packaging, deployment, and quality checks run in CI/CD for every change.
 - Keep documentation and diagrams versioned with the codebase; update them as part of feature work.
+
+### 2.1 Twelve-Factor App Principles
+
+All applications should follow [The Twelve-Factor App](https://12factor.net/) methodology to ensure scalability, maintainability, and cloud-readiness:
+
+#### I. Codebase
+- One codebase tracked in version control (Git), many deploys
+- Use Git submodules for backend/frontend when needed
+- Never duplicate code across repos; share via packages
+
+#### II. Dependencies
+- Explicitly declare and isolate dependencies
+- Python: use `uv` with lock files (`uv.lock`)
+- Node.js: use `pnpm` with lock files (`pnpm-lock.yaml`)
+- Never rely on implicit system packages
+
+#### III. Config
+- Store config in environment variables, never in code
+- Use `.env` files locally (never commit), environment injection in production
+- No hardcoded URLs, secrets, or environment-specific values
+- Use feature flags for behavioral config
+
+#### IV. Backing Services
+- Treat databases, caches, queues as attached resources
+- Access via URLs/connection strings in environment variables
+- Should be swappable without code changes (dev PostgreSQL → prod RDS)
+- Examples: PostgreSQL, Redis, S3, external APIs
+
+#### V. Build, Release, Run
+- Strictly separate build, release, and run stages
+- Build: Convert code to executable bundle (Docker image)
+- Release: Combine build with config for specific environment
+- Run: Execute the release in the execution environment
+- Use immutable releases with unique IDs (Git SHA, version tags)
+
+#### VI. Processes
+- Execute app as one or more stateless processes
+- Never store session state in memory; use Redis, database, or tokens
+- Shared data goes in backing services (PostgreSQL, S3)
+- Any process can be killed/restarted without data loss
+
+#### VII. Port Binding
+- Export services via port binding
+- Backend: bind to port via environment variable (e.g., `PORT=8000`)
+- Frontend: Next.js binds to `PORT` (default 3000)
+- No reliance on runtime injection of webserver (self-contained)
+
+#### VIII. Concurrency
+- Scale out via the process model
+- Use separate process types for different workloads:
+  - `web`: Handle HTTP requests (uvicorn, Next.js server)
+  - `worker`: Background jobs (Celery, Bull)
+  - `scheduler`: Cron-like tasks (Celery Beat)
+- Scale by adding more processes, not threads (horizontal scaling)
+
+#### IX. Disposability
+- Maximize robustness with fast startup and graceful shutdown
+- Processes should start quickly (< 10 seconds ideally)
+- Handle SIGTERM for graceful shutdown: finish current requests, close connections
+- Workers should return jobs to queue on shutdown
+- Be robust against sudden death (crashes, hardware failures)
+
+#### X. Dev/Prod Parity
+- Keep development, staging, and production as similar as possible
+- Same backing services (PostgreSQL everywhere, not SQLite in dev)
+- Same Docker images across environments
+- Deploy frequently to minimize divergence
+- Use Docker Compose for local dev to mirror production
+
+#### XI. Logs
+- Treat logs as event streams
+- Write to stdout/stderr, never manage log files
+- Use structured logging (JSON format)
+- Let environment handle routing (Docker logs, CloudWatch, Datadog)
+- Include trace IDs for request correlation
+
+#### XII. Admin Processes
+- Run admin/management tasks as one-off processes
+- Examples: database migrations, data imports, console sessions
+- Use same codebase and config as regular processes
+- Django: `python manage.py migrate`, `python manage.py shell`
+- Run in same environment with same dependencies
 
 ## 3. Codebase Management
 
@@ -125,27 +208,243 @@ Refer to the `./NEXTJS.md` file for best practices specific to Next.js projects.
 
 - Enforce HTTPS everywhere; redirect HTTP to HTTPS automatically.
 - Authenticate APIs with bearer tokens (JWT or opaque tokens) and authorise with least-privilege roles.
-- Store credentials and secrets in a dedicated secret manager (e.g., Vault, AWS Secrets Manager); never commit them to git.
+- **Never commit secrets**: Store credentials in secret managers (Vault, AWS Secrets Manager) or environment variables; follow Twelve-Factor config principles.
+- Use `.env` files for local development (add to `.gitignore`), environment injection for production.
 - Run SAST, dependency vulnerability scanning, and container image scanning in CI.
 - Apply secure coding guidelines (OWASP ASVS) and threat-model significant features. Document mitigations.
 
 ## 8. Performance & Resilience
 
+- **Design for horizontal scalability**: Follow Twelve-Factor concurrency model; scale by adding processes, not vertical resources.
+- **Build stateless processes**: Store session state in backing services (Redis, database), never in-memory.
 - Implement caching strategies (Redis, CDN) for frequent reads, with explicit cache invalidation rules.
-- Offload long-running work to asynchronous workers or event-driven pipelines.
+- Offload long-running work to asynchronous workers or event-driven pipelines (Celery, Bull).
 - Define performance budgets and SLIs/SLOs; test them via load/chaos testing prior to launch.
 - Instrument code with metrics, traces, and logs; aggregate them in a central observability stack.
 - Use circuit breakers, retries with exponential backoff, and timeouts when calling external services.
+- Design for disposability: handle SIGTERM gracefully, restart quickly, survive sudden process death.
 
 ## 9. Deployment & Operations
 
-- Build immutable images with Docker; pin versions of base images and dependencies.
+- **Follow Twelve-Factor principles**: Build immutable images, use environment variables for config, treat logs as streams (see [Section 2.1](#21-twelve-factor-app-principles)).
+- Build immutable Docker images with pinned base image versions and dependencies.
 - Use GitHub Actions or GitLab CI/CD pipelines for automated builds, tests, security scans, and deployments.
 - Roll out changes with canary or blue/green deployments when production impact is high; otherwise use rolling updates.
 - Manage configuration via environment variables injected at deploy time; keep environment parity across dev/staging/prod.
+- Design for disposability: fast startup (< 10s), graceful shutdown (handle SIGTERM), robust against crashes.
 - Maintain runbooks, incident response checklists, and rollback procedures stored alongside the service.
 
-## 10. Governance and Decision Records
+## 10. Language-Specific Best Practices
+
+### 10.1 Frontend (React/Next.js/TypeScript)
+
+**Component Structure:**
+```typescript
+// ProductCard.tsx
+import { type FC } from 'react';
+import { type Product } from '@/types';
+
+interface ProductCardProps {
+  product: Product;
+  onAddToCart: (productId: string) => void;
+}
+
+/**
+ * Displays product information with add-to-cart action.
+ * Implements design from Figma: [link]
+ * 
+ * @see PRD Section 3.2 - Product Discovery Journey
+ */
+export const ProductCard: FC<ProductCardProps> = ({ product, onAddToCart }) => {
+  // Implementation
+};
+```
+
+**Standards:**
+- Server components by default, client components marked explicitly
+- Strong TypeScript types, no `any`
+- Tailwind for styling, design tokens from theme
+- Loading/error states for all data fetching
+- Accessibility: semantic HTML, ARIA, keyboard nav
+- Performance: code splitting, image optimization
+
+### 10.2 Backend (Python/Django, Node.js/Express)
+
+**Service Layer Pattern:**
+```python
+# core/services/email_verification.py
+"""
+Email verification service for user authentication.
+
+Implements PRD Section 4.2 - User Authentication.
+See ADR-0015 for retry strategy.
+"""
+from typing import Optional
+import logging
+from django.core.exceptions import ValidationError
+
+logger = logging.getLogger(__name__)
+
+class EmailVerificationService:
+    """Handles email verification token generation and validation."""
+    
+    def send_verification_email(self, user_id: str, email: str) -> bool:
+        """
+        Send verification email to user.
+        
+        Args:
+            user_id: User's unique identifier
+            email: Email address to verify
+            
+        Returns:
+            True if email sent successfully
+            
+        Raises:
+            ValidationError: If email format invalid
+        """
+        logger.info("Sending verification email", extra={
+            "user_id": user_id,
+            "email": email,
+        })
+        # Implementation
+```
+
+**Standards:**
+- Type hints everywhere
+- Docstrings for all public APIs
+- Structured logging with context
+- Custom exceptions with actionable messages
+- Service layer for business logic
+- Keep views/controllers thin
+- Database migrations for schema changes
+
+### 10.3 Testing Standards
+
+**Test Structure:**
+```typescript
+// ProductCard.test.tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { ProductCard } from './ProductCard';
+import { mockProduct } from '@/test/fixtures';
+
+describe('ProductCard', () => {
+  it('displays product information correctly', () => {
+    // Arrange
+    const product = mockProduct({ name: 'Test Product' });
+    const onAddToCart = jest.fn();
+    
+    // Act
+    render(<ProductCard product={product} onAddToCart={onAddToCart} />);
+    
+    // Assert
+    expect(screen.getByText('Test Product')).toBeInTheDocument();
+  });
+  
+  it('calls onAddToCart when button clicked', () => {
+    // Test implementation
+  });
+  
+  it('handles out-of-stock products', () => {
+    // Edge case test
+  });
+});
+```
+
+**Coverage Requirements:**
+- Unit: All business logic functions
+- Integration: API endpoints, database interactions
+- E2E: Critical user journeys from PRD Section 3
+- Edge cases: Nulls, empty arrays, max values, errors
+- Performance: Load tests for scalability concerns
+
+## 11. Observability Requirements
+
+**Every feature must include:**
+
+### 11.1 Structured Logging
+
+```typescript
+logger.info('User created account', {
+  user_id: user.id,
+  signup_method: 'email',
+  referral_source: req.query.ref,
+  timestamp: new Date().toISOString(),
+});
+```
+
+### 11.2 Error Tracking
+
+```python
+try:
+    result = external_api.call()
+except ExternalAPIError as e:
+    logger.error("External API call failed", extra={
+        "error": str(e),
+        "trace_id": request.trace_id,
+        "retry_attempt": attempt,
+    })
+    raise
+```
+
+### 11.3 Metrics (for critical paths)
+
+```typescript
+metrics.increment('auth.signup.success', {
+  method: 'email',
+  source: referralSource,
+});
+
+metrics.timing('auth.signup.duration', duration);
+```
+
+## 12. Common Pitfalls to Avoid
+
+❌ **Starting code without reading PRD/user story**
+✅ Always review requirements and acceptance criteria first
+
+❌ **Skipping tests because "it's simple"**
+✅ Write tests for everything; simple code still breaks
+
+❌ **Hardcoding values instead of using config**
+✅ Use environment variables and feature flags
+
+❌ **Ignoring error cases and edge cases**
+✅ Handle errors gracefully, test edge cases
+
+❌ **Writing code without considering observability**
+✅ Add logging, metrics, and error tracking upfront
+
+❌ **Not documenting "why" behind complex logic**
+✅ Add comments explaining rationale, not just "what"
+
+❌ **Large commits with multiple concerns**
+✅ Keep commits small, focused, and atomic
+
+❌ **Pushing code that doesn't pass CI locally**
+✅ Run all quality gates before pushing
+
+❌ **Creating PRs without linking to issues**
+✅ Always reference GitHub issue and PRD section
+
+❌ **Not testing manually before requesting review**
+✅ Verify feature works end-to-end yourself first
+
+❌ **Mixing business logic in views/controllers**
+✅ Keep business logic in service layer
+
+❌ **Not using type hints or proper TypeScript types**
+✅ Strong typing catches bugs early and improves DX
+
+❌ **Skipping accessibility considerations for UI**
+✅ Build accessible interfaces from day one
+
+❌ **Over-engineering solutions prematurely**
+✅ Start simple, refactor when complexity is justified
+
+❌ **Not planning for rollback or failure scenarios**
+✅ Always have a rollback strategy and error handling
+
+## 13. Governance and Decision Records
 
 - Capture architectural decisions in ADRs within `docs/adrs/`; link them from relevant sections of this guideline.
 - Review this guideline quarterly to ensure technology choices remain current.
