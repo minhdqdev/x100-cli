@@ -29,3 +29,10 @@ tags
 
 
 config.json
+
+# Karate test artifacts
+tests/karate/target/
+tests/karate/.mvn/
+tests/karate/*.log
+tests/karate/mvnw
+tests/karate/mvnw.cmd
