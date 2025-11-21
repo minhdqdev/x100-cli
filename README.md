@@ -239,6 +239,44 @@ Use the workflow automation (recommended) or manually implement:
 ./x100  # Select "Manage Commands" or "Manage Agents"
 ```
 
+## 🧪 API Testing with Karate
+
+x100 includes enterprise-grade API automation testing using [Karate DSL](https://github.com/karatelabs/karate). Write BDD-style API tests with no coding required!
+
+**Quick Start:**
+```bash
+cd tests/karate
+./run-tests.sh smoke    # Run smoke tests
+./run-tests.sh parallel # Run all tests in parallel
+./run-tests.sh report   # View HTML report
+```
+
+**Features:**
+- ✅ BDD-style tests in Gherkin syntax
+- ✅ Parallel execution for faster feedback
+- ✅ Multi-environment support (dev, qa, staging, prod)
+- ✅ Rich HTML reports with detailed results
+- ✅ CI/CD ready with GitHub Actions
+- ✅ No Java/programming knowledge needed for writing tests
+
+**Documentation:**
+- [Karate Quick Start Guide](./KARATE_QUICKSTART.md) - Get started in 5 minutes
+- [Karate Full Documentation](./tests/karate/README.md) - Comprehensive guide
+- [x100 Integration Guide](./tests/karate/INTEGRATION.md) - Workflow integration
+
+**In Claude Code:**
+```bash
+# Enable Karate commands
+./x100 command enable test-api
+./x100 command enable generate-api-tests
+./x100 agent enable karate-test-generator
+
+# Use in Claude Code
+/test-api                    # Run API tests
+/test-api smoke              # Run smoke tests
+/generate-api-tests spec.yaml # Generate tests from spec
+```
+
 ## 📚 Core philosophy
 
 - **Context engineering is king**: detailed specs, constraints, and guidelines to guide AI agents
