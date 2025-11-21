@@ -62,9 +62,10 @@ class TestRunner {
      */
     public static void generateReport(String karateOutputPath) {
         try {
+            String reportDir = System.getProperty("cucumber.report.dir", "target/cucumber-html-reports");
             net.masterthought.cucumber.Configuration config = 
                 new net.masterthought.cucumber.Configuration(
-                    new java.io.File("target/cucumber-html-reports"), 
+                    new java.io.File(reportDir), 
                     "X100 Karate Tests"
                 );
             
@@ -88,7 +89,7 @@ class TestRunner {
                 net.masterthought.cucumber.ReportBuilder reportBuilder = 
                     new net.masterthought.cucumber.ReportBuilder(jsonFiles, config);
                 reportBuilder.generateReports();
-                System.out.println("Cucumber HTML report generated at: target/cucumber-html-reports/overview-features.html");
+                System.out.println("Cucumber HTML report generated at: " + reportDir + "/overview-features.html");
             }
         } catch (Exception e) {
             System.err.println("Error generating Cucumber report: " + e.getMessage());

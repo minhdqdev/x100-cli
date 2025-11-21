@@ -34,7 +34,7 @@ Feature: Product Management API Tests
       description: 'A test product for automation',
       price: 99.99,
       category: 'Electronics',
-      sku: '#(utils.randomString(8))',
+      sku: '#(utils.randomSku())',
       inStock: true,
       quantity: 100
     }

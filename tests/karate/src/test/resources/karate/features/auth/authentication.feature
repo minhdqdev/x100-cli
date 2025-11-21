@@ -9,11 +9,12 @@ Feature: Authentication API Tests
 
   @smoke @auth
   Scenario: User login with valid credentials
+    * def credentials = read('classpath:karate/data/test-credentials.json')
     * def loginData = 
     """
     {
-      username: 'testuser',
-      password: 'testpass123'
+      username: '#(credentials.testUser.username)',
+      password: '#(credentials.testUser.password)'
     }
     """
     Given path authPath + '/login'
@@ -100,7 +101,8 @@ Feature: Authentication API Tests
   @auth
   Scenario: Refresh access token
     # First login to get tokens
-    * def loginData = { username: 'testuser', password: 'testpass123' }
+    * def credentials = read('classpath:karate/data/test-credentials.json')
+    * def loginData = { username: '#(credentials.testUser.username)', password: '#(credentials.testUser.password)' }
     Given path authPath + '/login'
     And request loginData
     When method POST
@@ -125,7 +127,8 @@ Feature: Authentication API Tests
   @auth
   Scenario: Access protected endpoint with valid token
     # First login
-    * def loginData = { username: 'testuser', password: 'testpass123' }
+    * def credentials = read('classpath:karate/data/test-credentials.json')
+    * def loginData = { username: '#(credentials.testUser.username)', password: '#(credentials.testUser.password)' }
     Given path authPath + '/login'
     And request loginData
     When method POST
@@ -164,7 +167,8 @@ Feature: Authentication API Tests
   @auth
   Scenario: User logout
     # First login
-    * def loginData = { username: 'testuser', password: 'testpass123' }
+    * def credentials = read('classpath:karate/data/test-credentials.json')
+    * def loginData = { username: '#(credentials.testUser.username)', password: '#(credentials.testUser.password)' }
     Given path authPath + '/login'
     And request loginData
     When method POST
@@ -194,10 +198,13 @@ Feature: Authentication API Tests
 
   @auth
   Scenario: Password reset with token
+    # Note: In real scenarios, reset token would be obtained from password reset request
+    # or test data. This uses a placeholder token for demonstration.
+    * def resetToken = karate.properties['test.resetToken'] || 'test-reset-token-' + utils.uuid()
     * def resetData = 
     """
     {
-      resetToken: 'valid_reset_token',
+      resetToken: '#(resetToken)',
       newPassword: 'NewSecurePass123!'
     }
     """

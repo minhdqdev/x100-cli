@@ -19,6 +19,7 @@
         <maven.surefire.version>3.0.0</maven.surefire.version>
         <karate.version>1.4.1</karate.version>
         <cucumber.reporting.version>5.7.6</cucumber.reporting.version>
+        <logback.version>1.4.11</logback.version>
     </properties>
 
     <dependencies>
@@ -50,7 +51,7 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.4.11</version>
+            <version>${logback.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

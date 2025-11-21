@@ -47,7 +47,8 @@ check_prerequisites() {
         exit 1
     fi
     
-    JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F. '{print $1}')
+    # Extract Java version - handles both old format (1.8) and new format (11, 17, etc.)
+    JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | sed 's/^1\.//' | awk -F. '{print $1}')
     if [ "$JAVA_VERSION" -lt 11 ]; then
         print_error "Java 11 or higher is required. Current version: $(java -version 2>&1 | head -n 1)"
         exit 1

@@ -93,6 +93,14 @@ function fn() {
       }
       return result;
     },
+    // Generate random SKU (business format: SKU-XXXXXXXX)
+    randomSku: function() {
+      var numbers = '';
+      for (var i = 0; i < 8; i++) {
+        numbers += Math.floor(Math.random() * 10);
+      }
+      return 'SKU-' + numbers;
+    },
     // Generate UUID
     uuid: function() {
       return java.util.UUID.randomUUID().toString();

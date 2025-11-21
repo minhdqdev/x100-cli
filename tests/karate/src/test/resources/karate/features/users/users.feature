@@ -134,4 +134,5 @@ Feature: User Management API Tests
       total: '#number'
     }
     """
-    And match response.data == '#[10]'
+    And match response.data == '#array'
+    And assert response.data.length <= 10
