@@ -29,6 +29,10 @@ on:
 jobs:
   karate-tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     strategy:
       matrix:
         java-version: [11, 17]
@@ -118,6 +122,8 @@ jobs:
 
   smoke-tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: github.event_name == 'pull_request'
     
     steps:
