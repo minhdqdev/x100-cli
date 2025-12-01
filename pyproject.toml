@@ -7,11 +7,18 @@ name = "x100-cli"
 version = "0.1.0"
 description = "Create high-grade software at speed with AI agent"
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = []
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+    "platformdirs>=4.5.0",
+    "readchar>=4.2.1",
+    "rich>=14.2.0",
+    "truststore>=0.10.4",
+    "typer>=0.20.0",
+]
 
 [project.scripts]
-x100 = "x100_cli.cli:main"
+x100 = "x100_cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

@@ -1,13 +1,13 @@
 """Terminal UI helpers for the x100 CLI."""
+
 from __future__ import annotations
 
 import os
 import sys
 from typing import Callable, Sequence
 
-TITLE = """
+BANNER = """
 /====================================================\\
-||                                                  ||
 ||     █████ █████ ████     █████       █████       ||
 ||    ░░███ ░░███ ░░███   ███░░░███   ███░░░███     ||
 ||     ░░███ ███   ░███  ███   ░░███ ███   ░░███    ||
@@ -16,8 +16,9 @@ TITLE = """
 ||      ███ ░░███  ░███ ░░███   ███ ░░███   ███     ||
 ||     █████ █████ █████ ░░░█████░   ░░░█████░      ||
 ||    ░░░░░ ░░░░░ ░░░░░    ░░░░░░      ░░░░░░       ||
-||                                                  ||
 \\====================================================/"""
+
+TAGLINE = "x100 - Create high-grade software at speed with AI agents"
 
 RESET = "\x1b[0m"
 BOLD = "\x1b[1m"
@@ -122,7 +123,7 @@ def prompt_text(
 
 def render_menu(items: Sequence[str], selected: int) -> None:
     clear_screen()
-    print(TITLE)
+    print(BANNER)
     print()
     print(f"{BOLD}Use ↑/↓ to navigate, Enter or number to select.{RESET}")
     print()
@@ -138,7 +139,7 @@ def render_menu(items: Sequence[str], selected: int) -> None:
 
 def render_submenu(title: str, items: Sequence[str], selected: int) -> None:
     clear_screen()
-    print(TITLE)
+    print(BANNER)
     print()
     print(f"{BOLD}{title}{RESET}")
     print(f"{DIM}Use ↑/↓ to navigate, Enter or number to select. ESC to cancel.{RESET}")
@@ -151,7 +152,9 @@ def render_submenu(title: str, items: Sequence[str], selected: int) -> None:
             print(f"{prefix}{label}")
 
 
-def interactive_select(title: str, options: Sequence[str], default_index: int = 0) -> int | None:
+def interactive_select(
+    title: str, options: Sequence[str], default_index: int = 0
+) -> int | None:
     if not options:
         return None
     selected = max(0, min(default_index, len(options) - 1))
@@ -175,7 +178,9 @@ def interactive_select(title: str, options: Sequence[str], default_index: int = 
                 return idx
 
 
-def prompt_choice(question: str, options: Sequence[str], default_index: int | None = None) -> int:
+def prompt_choice(
+    question: str, options: Sequence[str], default_index: int | None = None
+) -> int:
     idx = interactive_select(question, options, default_index or 0)
     if idx is None:
         return default_index or 0
