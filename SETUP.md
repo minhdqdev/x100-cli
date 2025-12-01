@@ -5,12 +5,14 @@ Complete guide to setup x100 with Claude Code workflow automation.
 ## Prerequisites
 
 ### Required
+
 - **macOS/Linux** (or WSL2 on Windows)
 - **Claude Code** installed
 - **Git** installed
 - **uv** (Python package manager) - Install: `brew install uv` or `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 ### Optional
+
 - Python 3.11+ (will be managed by uv)
 
 ## Installation Steps
@@ -25,7 +27,7 @@ mkdir your-project-name
 cd your-project-name
 
 # Clone x100 as .x100
-git clone https://github.com/minhdqdev/x100-template.git .x100
+git clone https://github.com/minhdqdev/x100-cli.git .x100
 
 # Make scripts executable
 chmod +x .x100/scripts/*.sh
@@ -39,7 +41,7 @@ For an existing project:
 
 ```bash
 # Clone as submodule
-git submodule add https://github.com/minhdqdev/x100-template.git .x100
+git submodule add https://github.com/minhdqdev/x100-cli.git .x100
 
 # Make scripts executable
 chmod +x .x100/scripts/*.sh
@@ -57,6 +59,7 @@ ln -s .x100/x100 x100
 ```
 
 This will:
+
 - ✅ Create project directories (docs, submodules, tests, scripts)
 - ✅ Initialize git repository (if not exists)
 - ✅ Collect project metadata
@@ -81,12 +84,14 @@ Or directly:
 ```
 
 **What this does:**
+
 - Copies commands from `.x100/resources/claude/commands/` to `.claude/commands/`
 - Copies agents from `.x100/resources/claude/agents/` to `.claude/agents/`
 - Copies settings.json and statusline.sh
 - Sets up Claude Code integration
 
 **Result:**
+
 - `.claude/` directory created in your project root
 - Basic commands available: `/refine-idea`, `/generate-prd`, `/generate-user-stories`, etc.
 
@@ -98,6 +103,7 @@ Or directly:
 ```
 
 **What this does:**
+
 - ✅ Enables 7 workflow commands: `/start`, `/spec`, `/code`, `/review`, `/test`, `/done`, `/workflow`
 - ✅ Enables 4 orchestrator agents: `spec-writer`, `code-implementer`, `test-writer`, `workflow-orchestrator`
 - ✅ Copies them to `.claude/commands/` and `.claude/agents/`
@@ -131,6 +137,7 @@ Or directly:
 ```
 
 This checks:
+
 - ✅ Directory name is `.x100`
 - ✅ Outer directory is a git repo
 - ✅ Required directories exist (submodules, docs)
@@ -141,6 +148,7 @@ This checks:
 1. **Open Claude Code** in your project directory
 
 2. **Check commands are available:**
+
    - Type `/` in Claude Code
    - You should see available commands
 
@@ -240,6 +248,7 @@ your-project-name/
 ```
 
 This will automatically:
+
 1. Create technical specification
 2. Implement the code
 3. Write tests
@@ -400,7 +409,7 @@ git init
 
 - **Workflow Guide**: [resources/WORKFLOW.md](./.x100/resources/WORKFLOW.md)
 - **Quick Start**: [resources/WORKFLOW_QUICKSTART.md](./.x100/resources/WORKFLOW_QUICKSTART.md)
-- **Issues**: https://github.com/minhdqdev/x100-template/issues
+- **Issues**: https://github.com/minhdqdev/x100-cli/issues
 - **CLI Help**: `./x100 --help`
 
 ## Next Steps

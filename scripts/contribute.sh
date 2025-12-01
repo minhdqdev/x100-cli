@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # ================== Config ==================
-TEMPLATE_REPO="${X100_TEMPLATE_REPO:-minhdqdev/x100-template}"  # owner/repo
-[[ "$TEMPLATE_REPO" == "owner/x100-template" ]] && {
-  echo "Please set X100_TEMPLATE_REPO=owner/x100-template"; exit 1; }
+TEMPLATE_REPO="${X100_TEMPLATE_REPO:-minhdqdev/x100-cli}"  # owner/repo
+[[ "$TEMPLATE_REPO" == "owner/x100-cli" ]] && {
+  echo "Please set X100_TEMPLATE_REPO=owner/x100-cli"; exit 1; }
 
 # ================== Checks ==================
 need() { command -v "$1" >/dev/null 2>&1 || { echo "Missing: $1"; exit 1; }; }

@@ -21,6 +21,7 @@ First, enable all workflow commands and agents:
 ```
 
 This will activate:
+
 - **Commands**: `/start`, `/spec`, `/code`, `/review`, `/test`, `/done`, `/workflow`
 - **Agents**: `spec-writer`, `code-implementer`, `test-writer`, `workflow-orchestrator`
 
@@ -32,6 +33,7 @@ This will activate:
 ```
 
 The workflow will automatically:
+
 1. Create technical specification
 2. Implement the code
 3. Write comprehensive tests
@@ -45,17 +47,20 @@ The workflow will automatically:
 Begins feature development from a user story. Creates a technical specification and optionally starts implementation.
 
 **Usage:**
+
 ```
 /start docs/user-stories/US-001-feature.md
 ```
 
 **What it does:**
+
 1. Reads the user story
 2. Launches spec-writer agent to create technical spec
 3. Presents spec for your review
 4. Asks if you want to continue with implementation
 
 **When to use:**
+
 - Starting a new feature
 - Need to create a technical spec first
 - Want to review specs before coding
@@ -67,12 +72,14 @@ Begins feature development from a user story. Creates a technical specification 
 Creates or updates a detailed technical specification from a user story.
 
 **Usage:**
+
 ```
 /spec US-001
 /spec docs/user-stories/US-001-feature.md
 ```
 
 **What it does:**
+
 1. Reads the user story
 2. Analyzes requirements and acceptance criteria
 3. Creates detailed technical spec including:
@@ -83,6 +90,7 @@ Creates or updates a detailed technical specification from a user story.
 4. Saves to `docs/specs/SPEC-<US-ID>-<feature-name>.md`
 
 **Output:**
+
 - Comprehensive technical specification
 - Ready for implementation
 
@@ -93,12 +101,14 @@ Creates or updates a detailed technical specification from a user story.
 Implements code from a technical specification.
 
 **Usage:**
+
 ```
 /code docs/specs/SPEC-001-user-authentication.md
 /code user-authentication
 ```
 
 **What it does:**
+
 1. Reads the technical specification
 2. Launches code-implementer agent
 3. Implements code following the spec and project conventions
@@ -114,6 +124,7 @@ Implements code from a technical specification.
 Creates comprehensive tests for implemented code.
 
 **Usage:**
+
 ```
 /test
 /test src/features/auth/
@@ -121,6 +132,7 @@ Creates comprehensive tests for implemented code.
 ```
 
 **What it does:**
+
 1. Identifies code to test (from recent changes or specified files)
 2. Launches test-writer agent
 3. Creates unit and integration tests
@@ -129,6 +141,7 @@ Creates comprehensive tests for implemented code.
 6. Reports test coverage
 
 **Output:**
+
 - Comprehensive test suite
 - Test coverage report
 - All tests passing
@@ -140,12 +153,14 @@ Creates comprehensive tests for implemented code.
 Performs comprehensive code review of recent changes.
 
 **Usage:**
+
 ```
 /review
 /review src/features/auth/
 ```
 
 **What it does:**
+
 1. Identifies changes using git diff or specified files
 2. Launches code-reviewer agent
 3. Performs comprehensive review:
@@ -158,6 +173,7 @@ Performs comprehensive code review of recent changes.
 5. Asks if you want to fix issues
 
 **Output:**
+
 - Detailed code review report
 - Prioritized issues (Critical → High → Medium → Low)
 - Recommendations and fixes
@@ -169,12 +185,14 @@ Performs comprehensive code review of recent changes.
 Completes feature development with final checks, review, and commit.
 
 **Usage:**
+
 ```
 /done
 /done "feat: implement user authentication"
 ```
 
 **What it does:**
+
 1. Runs final checks:
    - Code review
    - All tests
@@ -189,6 +207,7 @@ Completes feature development with final checks, review, and commit.
 5. Asks about push/PR
 
 **Output:**
+
 - Feature committed and ready for push
 - All quality gates passed
 
@@ -199,6 +218,7 @@ Completes feature development with final checks, review, and commit.
 Runs the complete automated development workflow from user story to done.
 
 **Usage:**
+
 ```
 /workflow docs/user-stories/US-001-feature.md
 /workflow US-001
@@ -208,19 +228,23 @@ Runs the complete automated development workflow from user story to done.
 Orchestrates the complete workflow:
 
 1. **START Phase**:
+
    - Read user story
    - Create technical specification
    - Get user approval
 
 2. **CODE Phase**:
+
    - Implement code following spec
    - Run linting & type checking
 
 3. **TEST Phase**:
+
    - Create comprehensive tests
    - Run tests and verify all pass
 
 4. **REVIEW Phase**:
+
    - Comprehensive code review
    - Fix critical and high-priority issues
 
@@ -230,11 +254,13 @@ Orchestrates the complete workflow:
    - Ask about push/PR
 
 **When to use:**
+
 - Full automation from start to finish
 - Processing multiple user stories
 - Want hands-off development
 
 **Output:**
+
 - Feature fully implemented, tested, reviewed, and committed
 - Complete workflow report with metrics
 
@@ -247,6 +273,7 @@ Orchestrates the complete workflow:
 Creates detailed technical specifications from user stories.
 
 **Responsibilities:**
+
 - Analyze user stories and extract requirements
 - Design technical solution architecture
 - Create data models and API designs
@@ -262,6 +289,7 @@ Creates detailed technical specifications from user stories.
 Implements production-ready code from technical specifications.
 
 **Responsibilities:**
+
 - Implement code following specifications
 - Follow project conventions and patterns
 - Add proper error handling
@@ -269,6 +297,7 @@ Implements production-ready code from technical specifications.
 - Integrate with existing codebase
 
 **Focus:**
+
 - Clean, maintainable code
 - Security best practices
 - Performance considerations
@@ -280,6 +309,7 @@ Implements production-ready code from technical specifications.
 Creates comprehensive test suites for implemented code.
 
 **Responsibilities:**
+
 - Create unit and integration tests
 - Test happy paths and error cases
 - Ensure good test coverage (70%+)
@@ -287,6 +317,7 @@ Creates comprehensive test suites for implemented code.
 - Run tests and fix failures
 
 **Output:**
+
 - Comprehensive test suite
 - All tests passing
 - Coverage report
@@ -298,6 +329,7 @@ Creates comprehensive test suites for implemented code.
 Orchestrates the complete development workflow.
 
 **Responsibilities:**
+
 - Coordinate all workflow phases
 - Manage agent execution
 - Handle errors and retries
@@ -305,6 +337,7 @@ Orchestrates the complete development workflow.
 - Make informed decisions at checkpoints
 
 **Features:**
+
 - Automatic quality gates
 - Error recovery
 - Progress tracking
@@ -317,6 +350,7 @@ Orchestrates the complete development workflow.
 Performs comprehensive code quality assessment.
 
 **Responsibilities:**
+
 - Review code quality and standards
 - Identify security vulnerabilities
 - Check performance issues
@@ -324,6 +358,7 @@ Performs comprehensive code quality assessment.
 - Assess best practices adherence
 
 **Output:**
+
 - Detailed review report
 - Prioritized findings
 - Actionable recommendations
@@ -384,6 +419,7 @@ Performs comprehensive code quality assessment.
 ### 1. Start with Good User Stories
 
 Ensure your user stories are clear and complete:
+
 - Well-defined acceptance criteria
 - Clear business value
 - Testable requirements
@@ -391,6 +427,7 @@ Ensure your user stories are clear and complete:
 ### 2. Review Specs Before Coding
 
 Always review the generated technical spec:
+
 - Verify technical approach
 - Check data models and API design
 - Confirm implementation steps
@@ -398,6 +435,7 @@ Always review the generated technical spec:
 ### 3. Use Checkpoints
 
 The workflow has built-in checkpoints:
+
 - After spec creation
 - After code implementation
 - After test creation
@@ -408,6 +446,7 @@ Use these to review and provide feedback.
 ### 4. Iterative Refinement
 
 Don't expect perfection on first run:
+
 - Review generated code
 - Run additional reviews if needed
 - Iterate on tests and implementation
@@ -415,6 +454,7 @@ Don't expect perfection on first run:
 ### 5. Customize for Your Project
 
 Adapt the workflow to your needs:
+
 - Enable only the commands you need
 - Customize agent prompts (in `.claude/agents/`)
 - Adjust workflow steps
@@ -486,6 +526,7 @@ Adapt the workflow to your needs:
 **Issue:** Tests fail during workflow
 
 **Solution:**
+
 - Workflow will attempt to fix automatically
 - Review test failures
 - Use `/test` to re-run after manual fixes
@@ -495,6 +536,7 @@ Adapt the workflow to your needs:
 **Issue:** Critical security or quality issues found
 
 **Solution:**
+
 - Workflow will fix automatically
 - Review fixes before proceeding
 - Re-run `/review` if needed
@@ -504,6 +546,7 @@ Adapt the workflow to your needs:
 **Issue:** "Agent not found" error
 
 **Solution:**
+
 ```bash
 # Enable the required agent
 ./x100 agent enable spec-writer
@@ -521,29 +564,32 @@ Adapt the workflow to your needs:
 ### x100 Advantages
 
 ✅ **Less Overhead**
+
 - Simpler directory structure
 - Fewer configuration files
 - Faster setup
 
 ✅ **Flexible Workflow**
+
 - Use full workflow or individual commands
 - Easy to customize
 - Enable only what you need
 
 ✅ **Built-in Automation**
+
 - Commands and agents work together
 - Automatic quality gates
 - Error recovery
 
 ### Key Differences
 
-| Feature | x100 | BMAD | SpecKit |
-|---------|------|------|---------|
-| Setup Complexity | Low | Medium | High |
-| Workflow Automation | Yes | Yes | Limited |
-| Custom Commands | Yes | Yes | Yes |
-| Agent System | Yes | Yes | Partial |
-| CLI Management | Yes | No | No |
+| Feature             | x100 | BMAD   | SpecKit |
+| ------------------- | ---- | ------ | ------- |
+| Setup Complexity    | Low  | Medium | High    |
+| Workflow Automation | Yes  | Yes    | Limited |
+| Custom Commands     | Yes  | Yes    | Yes     |
+| Agent System        | Yes  | Yes    | Partial |
+| CLI Management      | Yes  | No     | No      |
 
 ---
 
@@ -591,7 +637,7 @@ claude-code "/test && /review"
 - **Documentation**: Read this guide and command descriptions
 - **List Commands**: `./x100 command list`
 - **List Agents**: `./x100 agent list`
-- **Issues**: https://github.com/minhdqdev/x100-template/issues
+- **Issues**: https://github.com/minhdqdev/x100-cli/issues
 
 ---
 

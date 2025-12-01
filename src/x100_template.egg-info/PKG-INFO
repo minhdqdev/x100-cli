@@ -1,3 +1,10 @@
+Metadata-Version: 2.4
+Name: x100-cli
+Version: 0.1.0
+Summary: Create high-grade software at speed with AI agent
+Requires-Python: >=3.13
+Description-Content-Type: text/markdown
+
 <div align="right">
   <details>
     <summary >🌐 Language</summary>
@@ -37,7 +44,7 @@
 
 A starter blueprint for new and existing projects, built to speed up dev workflows—especially when wiring up AI agents with spec-driven development.
 
-## ⚡️ Get started
+## ⚡️ Get started 
 
 ### 🔧 Prerequisites
 
@@ -67,7 +74,6 @@ chmod +x .x100/x100
 ```
 
 **Troubleshooting:**
-
 - `uv not found`: `brew install uv` (macOS) or `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - Commands not showing: `./x100 workflow-enable` and restart Claude Code
 - Permission denied: `chmod +x .x100/x100`
@@ -155,7 +161,6 @@ Or use CLI commands directly:
 x100 includes a complete workflow automation system. See [Workflow Quick Start](./resources/WORKFLOW_QUICKSTART.md).
 
 **Quick Start:**
-
 ```bash
 # Enable workflow
 ./x100 workflow-enable
@@ -166,24 +171,22 @@ x100 includes a complete workflow automation system. See [Workflow Quick Start](
 
 **Available workflow commands:**
 
-| Command     | Description                                |
-| ----------- | ------------------------------------------ |
-| `/start`    | Start feature development from user story  |
-| `/spec`     | Create technical specification             |
-| `/code`     | Implement code from spec                   |
-| `/test`     | Create and run tests                       |
-| `/review`   | Comprehensive code review                  |
-| `/done`     | Complete feature and commit                |
+| Command | Description |
+|---------|-------------|
+| `/start` | Start feature development from user story |
+| `/spec` | Create technical specification |
+| `/code` | Implement code from spec |
+| `/test` | Create and run tests |
+| `/review` | Comprehensive code review |
+| `/done` | Complete feature and commit |
 | `/workflow` | **Full automation** - runs all steps above |
 
 **Step-by-step workflow:**
-
 ```
 /start US-001 → /code → /test → /review → /done
 ```
 
 **Examples:**
-
 ```bash
 # Full automation
 /workflow docs/user-stories/US-002-your-feature.md
@@ -205,30 +208,24 @@ For detailed workflow guide, see [resources/WORKFLOW.md](./resources/WORKFLOW.md
 ### Traditional Approach (Idea → PRD → User Stories)
 
 #### Refine your idea
-
 1. Define your project idea in `docs/IDEA.md`.
 2. Use AI agent command: `/refine-idea`
 3. Review and edit the refined idea in `docs/REFINED_IDEA.md`
 
 #### From refined idea to PRD
-
 1. Use AI agent command: `/generate-prd`
 2. Review and edit the generated PRD in `docs/PRD.md`
 
 #### From PRD to product backlog
-
 1. Use AI agent command: `/generate-product-backlog`
 2. Review and edit the generated product backlog in `docs/PRODUCT_BACKLOG.md`
 
 #### From product backlog to user stories
-
 1. Use AI agent command: `/generate-user-stories`
 2. Review and edit the generated user stories in `docs/user-stories/US-<ID>.md`
 
 #### From user stories to code
-
 Use the workflow automation (recommended) or manually implement:
-
 1. Use `/workflow` for full automation
 2. Or use step-by-step: `/start` → `/code` → `/test` → `/review` → `/done`
 
@@ -261,19 +258,16 @@ Use the workflow automation (recommended) or manually implement:
 - **Agile methodologies** adapted for AI-augmented workflows: epics, user stories, tasks
 
 - Use `AGENTS.md` for all agents used in the project
-
   - Read more in [here](https://agents.md)
 
--
+- 
 
 ## 👥 Contributors
 
 Owner:
-
 - Minh Dang Quang ([@minhdqdev](https://github.com/minhdqdev))
 
 Contributors:
-
 - Dang Hai Loc ([@hailoc12](https://github.com/hailoc12))
 
 ## 🤝 Contributing
