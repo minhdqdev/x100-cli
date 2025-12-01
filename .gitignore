@@ -9,6 +9,8 @@
 **/__pycache__/
 **/*.pyc
 
+*.egg-info/
+
 
 # Claude Code settings
 .claude/settings.json
@@ -30,5 +32,4 @@ tags
 
 config.json
 
-
-test-projects/
+ref/
