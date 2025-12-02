@@ -2,7 +2,10 @@
 
 ## Our Pledge
 
-We as members, contributors, and leaders pledge to make participation in our community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, caste, color, religion, or sexual identity and orientation.
+We as members, contributors, and leaders pledge to make participation in our community a harassment-free experience 
+for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, 
+gender identity and expression, level of experience, education, socio-economic status, 
+nationality, personal appearance, race, caste, color, religion, or sexual identity and orientation.
 
 We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.
 
@@ -21,7 +24,8 @@ We pledge to act and interact in ways that contribute to an open, welcoming, div
 
 The following behaviors are considered harassment and are unacceptable:
 
-- **Hate speech**: The use of abusive or threatening speech that expresses prejudice against a particular group, especially on the basis of race, religion, gender, sexual orientation, or other characteristics
+- **Hate speech**: The use of abusive or threatening speech that expresses prejudice against a particular group, 
+especially on the basis of race, religion, gender, sexual orientation, or other characteristics
 - **Discriminatory language**: Slurs, offensive comments, or language targeting protected characteristics
 - **Personal attacks**: Insulting, demeaning, or hostile comments directed at individuals
 - **Harassment**: Deliberate intimidation, stalking, following, or threatening
@@ -35,6 +39,7 @@ The following behaviors are considered harassment and are unacceptable:
 ### Reporting
 
 If you experience or witness unacceptable behavior, please report it by:
+
 - Creating an issue with the `moderation` label
 - Contacting the repository maintainers directly
 - Using GitHub's built-in reporting mechanisms
@@ -56,6 +61,7 @@ Community leaders will follow these guidelines in determining consequences:
 ## Scope
 
 This Code of Conduct applies within all community spaces, including:
+
 - Issues and pull requests
 - Discussions and comments
 - Wiki and documentation

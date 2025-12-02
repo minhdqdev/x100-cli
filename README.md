@@ -35,15 +35,19 @@
     <h3><em>Create high-grade software at speed with AI agent</em></h3>
 </div>
 
-A starter blueprint for new and existing projects, built to speed up dev workflows—especially when wiring up AI agents with spec-driven development.
+A starter blueprint for new and existing projects, built to speed up dev workflows—especially when wiring up AI agents 
+with spec-driven development.
 
 ## ⚡️ Get started
 
 ### 🔧 Prerequisites
 
 - **Linux/macOS** (or WSL2 on Windows)
-- **Claude Code** (recommended) or other AI coding agents: [OpenAI Codex](https://openai.com/codex/), [GitHub Copilot](https://code.visualstudio.com/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), or [Cursor](https://cursor.sh/)
-- **[uv](https://docs.astral.sh/uv/)** for Python package management - Install: `brew install uv` (macOS) or `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- **Claude Code** (recommended) or other AI coding agents: [OpenAI Codex](https://openai.com/codex/), 
+[GitHub Copilot](https://code.visualstudio.com/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), 
+or [Cursor](https://cursor.sh/)
+- **[uv](https://docs.astral.sh/uv/)** for Python package management - 
+Install: `brew install uv` (macOS) or `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - **Git** installed
 - Basic familiarity with Markdown and shell scripting
 
@@ -95,7 +99,8 @@ If your project uses Git, you may want to add this template as a submodule for y
 git submodule add -b <branch_name> <repo_url> .x100
 ```
 
-That's it! You can now start defining your project idea in `docs/IDEA.md` and use the AI agent commands to generate refined ideas, PRDs, implementation plans, code, and tests.
+That's it! You can now start defining your project idea in `docs/IDEA.md` 
+and use the AI agent commands to generate refined ideas, PRDs, implementation plans, code, and tests.
 
 Read more in the [Use the template](#use-the-template) section below.
 
@@ -178,7 +183,7 @@ x100 includes a complete workflow automation system. See [Workflow Quick Start](
 
 **Step-by-step workflow:**
 
-```
+```plain
 /start US-001 → /code → /test → /review → /done
 ```
 
@@ -278,20 +283,25 @@ Contributors:
 
 ## 🤝 Contributing
 
-If you have integrated this template into your project, please consider contributing back any improvements to the original [x100-cli](https://github.com/minhdqdev/x100-cli). We have provided a very convenient way to help you do so, just run:
+If you have integrated this template into your project, please consider contributing back any improvements to 
+the original [x100-cli](https://github.com/minhdqdev/x100-cli). We have provided a very convenient way to help you do so, just run:
 
 ```bash
 ./x100 contribute
 ```
 
-You need to install `gh` CLI and authenticate it with your GitHub account first. This command will create a fork of the original repository, commit your changes to a new branch, and open a pull request for you.
+You need to install `gh` CLI and authenticate it with your GitHub account first. 
+This command will create a fork of the original repository, commit your changes to a new branch, 
+and open a pull request for you.
 
 Read more in the [Contributing Guide](./.github/CONTRIBUTING.md).
 
 ## 💬 Support
 
-For support, please open a [GitHub issue](https://github.com/minhdqdev/x100-cli/issues/new). We welcome bug reports, feature requests, and questions about using the template.
+For support, please open a [GitHub issue](https://github.com/minhdqdev/x100-cli/issues/new). 
+We welcome bug reports, feature requests, and questions about using the template.
 
 ## 📄 License
 
-This project is licensed under the terms of the MIT open source license. Please refer to the [LICENSE](./.github/LICENSE) file for the full terms.
+This project is licensed under the terms of the MIT open source license. 
+Please refer to the [LICENSE](./.github/LICENSE) file for the full terms.
