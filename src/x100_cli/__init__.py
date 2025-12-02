@@ -25,7 +25,7 @@ import json
 import ssl
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 import readchar
 
 import typer
@@ -51,6 +51,7 @@ from .ui import (
 
 from .core import (
     is_x100_project,
+    X100_CONFIG_PATH,
     X100_CONFIG,
     AGENT_CONFIG,
 )
@@ -928,7 +929,129 @@ def ensure_executable_scripts(
                 console.print(f"  - {f}")
 
 
-@app.command(hidden=False)
+def list_registered_agents():
+    agents = X100_CONFIG.get("agents", {})
+
+    if not agents:
+        console.print("[yellow]No agents registered.[/yellow]")
+        return
+
+    table = Table(title="Registered AI Agents")
+    table.add_column("Agent Name", style="cyan", no_wrap=True)
+    table.add_column("Enabled", style="magenta")
+
+    for agent_name, agent_info in agents.items():
+        enabled = (
+            "[green]Yes[/green]"
+            if agent_info.get("enabled", False)
+            else "[red]No[/red]"
+        )
+        table.add_row(agent_name, enabled)
+
+    console.print(table)
+
+
+@app.command()
+def agent(
+    subcommand: str = typer.Argument(None, help="Subcommand: list, enable, disable")
+):
+    """
+    Manage AI agents for your x100 project.
+
+    Subcommands:
+        list      List all available agents
+        enable    Enable a specific agent
+        disable   Disable a specific agent
+    """
+    # from .commands.agents import manage_agents, list_available_agents, enable_agent, disable_agent
+
+    # paths = detect_tool_paths()
+
+    if subcommand == "list":
+        list_registered_agents()
+    # elif subcommand == "enable":
+    #     enable_agent(paths)
+    # elif subcommand == "disable":
+    #     disable_agent(paths)
+    # else:
+    #     manage_agents(paths)
+
+
+def set_github_repo_url(url):
+    """Set the GitHub repository URL in the x100 project configuration."""
+    if not X100_CONFIG_PATH.exists():
+        console.print(
+            "[red]Error:[/red] No x100 project configuration found in the current directory."
+        )
+        raise typer.Exit(1)
+
+    X100_CONFIG.setdefault("project", {})
+    X100_CONFIG["project"]["url"] = url
+
+    # Extract project id from url if possible
+    if "github.com/" in url:
+        parts = url.split("/projects/")[-1].split("/")
+        if parts:
+            project_id = parts[0]
+            X100_CONFIG["project"]["id"] = project_id
+
+    else:
+        console.print("[red]Error: Unable to extract project ID from URL.[/red]")
+        raise typer.Exit(1)
+
+    try:
+        with open(X100_CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(X100_CONFIG, f, indent=4)
+            f.write("\n")
+        console.print(f"[green]✓[/green] Set GitHub repository URL to: {url}")
+    except Exception as e:
+        console.print(f"[red]Error writing configuration:[/red] {e}")
+        raise typer.Exit(1)
+
+
+@app.command(name="project")
+def project(
+    subcommand: str = typer.Argument(None, help="Subcommand: set-url, info"),
+    args: List[str] = typer.Argument(None, help="Additional arguments for subcommands"),
+):
+    """
+    Manage project settings for your x100 project.
+
+    Subcommands:
+        set-url    Set the URL for the project
+    """
+
+    if subcommand == "set-url":
+        url = args[0] if args else None
+        if not url:
+            console.print("[red]Error:[/red] Project URL is required.")
+            raise typer.Exit(1)
+        set_github_repo_url(url)
+    elif subcommand == "info":
+        if not X100_CONFIG_PATH.exists():
+            console.print(
+                "[red]Error:[/red] No x100 project configuration found in the current directory."
+            )
+            raise typer.Exit(1)
+
+        project_info = X100_CONFIG.get("project", {})
+        project_type = project_info.get("type", "N/A")
+
+        if project_type == "github_project":
+            table = Table(title="GitHub Project Information")
+            table.add_column("Field", style="cyan", no_wrap=True)
+            table.add_column("Value", style="white")
+
+            for key, value in project_info.items():
+                table.add_row(key, str(value))
+
+        console.print(table)
+    else:
+        console.print("[red]Error:[/red] Unknown subcommand.")
+        raise typer.Exit(1)
+
+
+@app.command()
 def init(
     project_name: str = typer.Argument(
         None,
@@ -1410,8 +1533,33 @@ def check():
     # Check AGENTS.md presence
     tracker.add("agents_md", "Presence of AGENTS.md")
     check_file("agents_md", Path.cwd() / "AGENTS.md", tracker=tracker)
+
+    # Check LICENSE presence
+    tracker.add("license", "Presence of LICENSE")
+    if not check_file("license", Path.cwd() / "LICENSE", tracker=tracker):
+        check_file("license", Path.cwd() / ".github" / "LICENSE", tracker=tracker)
+
+    # Check CONTRIBUTING.md presence
+    tracker.add("contributing", "Presence of CONTRIBUTING.md")
+    if not check_file("contributing", Path.cwd() / "CONTRIBUTING.md", tracker=tracker):
+        check_file(
+            "contributing", Path.cwd() / ".github" / "CONTRIBUTING.md", tracker=tracker
+        )
+
+    # Check CODE_OF_CONDUCT.md presence
+    tracker.add("code_of_conduct", "Presence of CODE_OF_CONDUCT.md")
+    if not check_file(
+        "code_of_conduct", Path.cwd() / "CODE_OF_CONDUCT.md", tracker=tracker
+    ):
+        check_file(
+            "code_of_conduct",
+            Path.cwd() / ".github" / "CODE_OF_CONDUCT.md",
+            tracker=tracker,
+        )
+
     console.print(tracker.render())
 
+    # Show tips
     if not git_ok:
         console.print("[dim]Tip: Install git for repository management[/dim]")
 

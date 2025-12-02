@@ -12,16 +12,17 @@ from pathlib import Path
 from . import ui
 
 
+X100_CONFIG_PATH = Path.cwd() / ".x100" / "config.json"
+
+
 def load_config() -> None:
     """Load configuration from .x100/config.json in the current working directory."""
 
-    config_path = Path.cwd() / ".x100" / "config.json"
-
-    if not config_path.exists():
+    if not X100_CONFIG_PATH.exists():
         return {}
 
     try:
-        cfg_text = config_path.read_text(encoding="utf-8")
+        cfg_text = X100_CONFIG_PATH.read_text(encoding="utf-8")
         cfg_data = json.loads(cfg_text)
         if isinstance(cfg_data, dict):
             return cfg_data
