@@ -346,7 +346,7 @@ function Build-Variant {
     }
     
     # Create zip archive
-    $zipFile = Join-Path $GenReleasesDir "spec-kit-template-${Agent}-${Script}-${Version}.zip"
+    $zipFile = Join-Path $GenReleasesDir "x100-template-${Agent}-${Script}-${Version}.zip"
     Compress-Archive -Path "$baseDir/*" -DestinationPath $zipFile -Force
     Write-Host "Created $zipFile"
 }
@@ -415,6 +415,6 @@ foreach ($agent in $AgentList) {
 }
 
 Write-Host "`nArchives in ${GenReleasesDir}:"
-Get-ChildItem -Path $GenReleasesDir -Filter "spec-kit-template-*-${Version}.zip" | ForEach-Object {
+Get-ChildItem -Path $GenReleasesDir -Filter "x100-template-*-${Version}.zip" | ForEach-Object {
     Write-Host "  $($_.Name)"
 }
