@@ -8,7 +8,7 @@
     "no-multiple-blanks": false,
     "no-inline-html": false,
     "line-length": {
-        "line_length": 120
+        "line_length": 200
     },
     "first-line-heading": false,
     "no-alt-text": false,
