@@ -4,7 +4,16 @@ from __future__ import annotations
 
 import os
 import sys
+import shutil
 from typing import Callable, Sequence
+from rich.tree import Tree
+from pathlib import Path
+from rich.text import Text
+from rich.align import Align
+from rich.tree import Tree
+from rich.console import Console
+
+console = Console()
 
 BANNER = """
 /====================================================\\
@@ -27,6 +36,105 @@ REVERSE = "\x1b[7m"
 GREEN = "\x1b[32m"
 YELLOW = "\x1b[33m"
 RED = "\x1b[31m"
+
+
+class StepTracker:
+    """Track and render hierarchical steps without emojis, similar to Claude Code tree output.
+    Supports live auto-refresh via an attached refresh callback.
+    """
+
+    def __init__(self, title: str):
+        self.title = title
+        self.steps = []  # list of dicts: {key, label, status, detail}
+        self.status_order = {
+            "pending": 0,
+            "running": 1,
+            "done": 2,
+            "error": 3,
+            "skipped": 4,
+        }
+        self._refresh_cb = None  # callable to trigger UI refresh
+
+    def attach_refresh(self, cb):
+        self._refresh_cb = cb
+
+    def add(self, key: str, label: str):
+        if key not in [s["key"] for s in self.steps]:
+            self.steps.append(
+                {"key": key, "label": label, "status": "pending", "detail": ""}
+            )
+            self._maybe_refresh()
+
+    def start(self, key: str, detail: str = ""):
+        self._update(key, status="running", detail=detail)
+
+    def complete(self, key: str, detail: str = ""):
+        self._update(key, status="done", detail=detail)
+
+    def error(self, key: str, detail: str = ""):
+        self._update(key, status="error", detail=detail)
+
+    def skip(self, key: str, detail: str = ""):
+        self._update(key, status="skipped", detail=detail)
+
+    def _update(self, key: str, status: str, detail: str):
+        for s in self.steps:
+            if s["key"] == key:
+                s["status"] = status
+                if detail:
+                    s["detail"] = detail
+                self._maybe_refresh()
+                return
+
+        self.steps.append(
+            {"key": key, "label": key, "status": status, "detail": detail}
+        )
+        self._maybe_refresh()
+
+    def _maybe_refresh(self):
+        if self._refresh_cb:
+            try:
+                self._refresh_cb()
+            except Exception:
+                pass
+
+    def render(self):
+        tree = Tree(f"[cyan]{self.title}[/cyan]", guide_style="grey50")
+        for step in self.steps:
+            label = step["label"]
+            detail_text = step["detail"].strip() if step["detail"] else ""
+
+            status = step["status"]
+            if status == "done":
+                symbol = "[green]●[/green]"
+            elif status == "pending":
+                symbol = "[green dim]○[/green dim]"
+            elif status == "running":
+                symbol = "[cyan]○[/cyan]"
+            elif status == "error":
+                symbol = "[red]●[/red]"
+            elif status == "skipped":
+                symbol = "[yellow]○[/yellow]"
+            else:
+                symbol = " "
+
+            if status == "pending":
+                # Entire line light gray (pending)
+                if detail_text:
+                    line = (
+                        f"{symbol} [bright_black]{label} ({detail_text})[/bright_black]"
+                    )
+                else:
+                    line = f"{symbol} [bright_black]{label}[/bright_black]"
+            else:
+                # Label white, detail (if any) light gray in parentheses
+                if detail_text:
+                    line = f"{symbol} [white]{label}[/white] [bright_black]({detail_text})[/bright_black]"
+                else:
+                    line = f"{symbol} [white]{label}[/white]"
+
+            tree.add(line)
+        return tree
 
 
 if os.name == "nt":  # pragma: no cover - interactive Windows behavior
@@ -217,3 +325,79 @@ def menu_loop(options: Sequence[str], actions: Sequence[Callable[[], None]]) -> 
         except KeyboardInterrupt:
             clear_screen()
             sys.exit(0)
+
+
+CLAUDE_LOCAL_PATH = Path.home() / ".claude" / "local" / "claude"
+
+
+def check_file(key: str, file_path: Path, tracker: StepTracker = None) -> bool:
+    """Check if a file exists. Optionally update tracker.
+
+    Args:
+        file_path: Path to the file to check
+        tracker: Optional StepTracker to update with results
+
+    Returns:
+        True if file exists, False otherwise
+    """
+    exists = file_path.is_file()
+    if tracker:
+        if exists:
+            tracker.complete(key, "found")
+        else:
+            tracker.error(key, "not found")
+    return exists
+
+
+def check_tool(tool: str, tracker: StepTracker = None) -> bool:
+    """Check if a tool is installed. Optionally update tracker.
+
+    Args:
+        tool: Name of the tool to check
+        tracker: Optional StepTracker to update with results
+
+    Returns:
+        True if tool is found, False otherwise
+    """
+    # Special handling for Claude CLI after `claude migrate-installer`
+    # See: https://github.com/github/spec-kit/issues/123
+    # The migrate-installer command REMOVES the original executable from PATH
+    # and creates an alias at ~/.claude/local/claude instead
+    # This path should be prioritized over other claude executables in PATH
+    if tool == "claude":
+        if CLAUDE_LOCAL_PATH.exists() and CLAUDE_LOCAL_PATH.is_file():
+            if tracker:
+                tracker.complete(tool, "available")
+            return True
+
+    found = shutil.which(tool) is not None
+
+    if tracker:
+        if found:
+            tracker.complete(tool, "available")
+        else:
+            tracker.error(tool, "not found")
+
+    return found
+
+
+def show_banner():
+    """Display the ASCII art banner."""
+    banner_lines = BANNER.strip().split("\n")
+    colors = [
+        "orange_red1",
+        "dark_orange",
+        "orange1",
+        "orange1",
+        "wheat1",
+        "light_goldenrod1",
+    ]
+
+    styled_banner = Text()
+    for i, line in enumerate(banner_lines):
+        color = colors[i % len(colors)]
+        styled_banner.append(line + "\n", style=color)
+
+    console.print(Align.center(styled_banner))
+    console.print(Align.center(Text(TAGLINE, style="italic orange_red1")))
+    console.print()

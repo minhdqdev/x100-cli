@@ -8,9 +8,28 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterable
 
 from . import ui
+
+
+def load_config() -> None:
+    """Load configuration from .x100/config.json in the current working directory."""
+
+    config_path = Path.cwd() / ".x100" / "config.json"
+
+    if not config_path.exists():
+        return {}
+
+    try:
+        cfg_text = config_path.read_text(encoding="utf-8")
+        cfg_data = json.loads(cfg_text)
+        if isinstance(cfg_data, dict):
+            return cfg_data
+    except Exception:
+        return {}
+
+
+X100_CONFIG = load_config()
 
 
 @dataclass(frozen=True)
@@ -764,35 +783,35 @@ def enable_workflow(paths: ToolPaths) -> None:
     ui.pause("\nPress Enter to return to menu…")
 
 
-def run_menu(paths: ToolPaths) -> None:
-    options = [
-        "Init project",
-        "Setup VSCode",
-        "Setup AI Agent",
-        "Manage Commands",
-        "Manage Agents",
-        "Enable Workflow",
-        "Verify",
-        "Exit",
-    ]
+# def run_menu(paths: ToolPaths) -> None:
+#     options = [
+#         "Init project",
+#         "Setup VSCode",
+#         "Setup AI Agent",
+#         "Manage Commands",
+#         "Manage Agents",
+#         "Enable Workflow",
+#         "Verify",
+#         "Exit",
+#     ]
 
-    actions: Iterable[Callable[[], None]] = [
-        lambda: init_project(paths),
-        lambda: setup_vscode(paths),
-        lambda: setup_ai_agent(paths),
-        lambda: manage_commands(paths),
-        lambda: manage_agents(paths),
-        lambda: enable_workflow(paths),
-        lambda: verify(paths),
-        _exit_app,
-    ]
+#     actions: Iterable[Callable[[], None]] = [
+#         lambda: init_project(paths),
+#         lambda: setup_vscode(paths),
+#         lambda: setup_ai_agent(paths),
+#         lambda: manage_commands(paths),
+#         lambda: manage_agents(paths),
+#         lambda: enable_workflow(paths),
+#         lambda: verify(paths),
+#         _exit_app,
+#     ]
 
-    ui.menu_loop(options, list(actions))
+#     ui.menu_loop(options, list(actions))
 
 
-def _exit_app() -> None:
-    ui.clear_screen()
-    sys.exit(0)
+# def _exit_app() -> None:
+#     ui.clear_screen()
+#     sys.exit(0)
 
 
 # Agent configuration with name, folder, install URL, and CLI tool requirement
@@ -894,3 +913,16 @@ AGENT_CONFIG = {
         "requires_cli": False,
     },
 }
+
+
+def is_x100_project(path: Path) -> bool:
+    """Check if the given path is an x100 project (contains .x100 folder)."""
+    x100_dir = path / ".x100"
+    if not x100_dir.is_dir():
+        return False
+
+    config_file = x100_dir / "config.json"
+    if not config_file.is_file():
+        return False
+
+    return True

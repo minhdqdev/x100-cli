@@ -16,6 +16,7 @@ Or install globally:
 import os
 import subprocess
 import sys
+import argparse
 import zipfile
 import tempfile
 import shutil
@@ -30,10 +31,8 @@ import readchar
 import typer
 import httpx
 
-from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.text import Text
 from rich.live import Live
 from rich.align import Align
 from rich.table import Table
@@ -42,25 +41,17 @@ from typer.core import TyperGroup
 import truststore
 
 
-import argparse
-from typing import Sequence
+from .ui import (
+    show_banner,
+    StepTracker,
+    console,
+    check_tool,
+    check_file,
+)
 
-from . import ui
 from .core import (
-    detect_tool_paths,
-    disable_agent,
-    disable_command,
-    enable_agent,
-    enable_command,
-    enable_workflow,
-    init_project,
-    list_available_agents,
-    list_available_commands,
-    manage_agents,
-    manage_commands,
-    run_contribute,
-    run_menu,
-    verify,
+    is_x100_project,
+    X100_CONFIG,
     AGENT_CONFIG,
 )
 
@@ -104,58 +95,58 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def old_main(argv: Sequence[str] | None = None) -> None:
-    parser = build_parser()
-    args = parser.parse_args(argv)
-    paths = detect_tool_paths()
+# def old_main(argv: Sequence[str] | None = None) -> None:
+#     parser = build_parser()
+#     args = parser.parse_args(argv)
+#     paths = detect_tool_paths()
 
-    command = args.command
+#     command = args.command
 
-    if command in ("init", "initialize", "init-project"):
-        ui.clear_screen()
-        init_project(paths, wait_for_key=False)
-        return
-    if command == "contribute":
-        ui.clear_screen()
-        run_contribute(paths)
-        return
-    if command == "verify":
-        ui.clear_screen()
-        verify(paths)
-        return
-    if command == "workflow-enable":
-        ui.clear_screen()
-        enable_workflow(paths)
-        return
+#     if command in ("init", "initialize", "init-project"):
+#         ui.clear_screen()
+#         init_project(paths, wait_for_key=False)
+#         return
+#     if command == "contribute":
+#         ui.clear_screen()
+#         run_contribute(paths)
+#         return
+#     if command == "verify":
+#         ui.clear_screen()
+#         verify(paths)
+#         return
+#     if command == "workflow-enable":
+#         ui.clear_screen()
+#         enable_workflow(paths)
+#         return
 
-    if command == "command":
-        ui.clear_screen()
-        subcommand = getattr(args, "subcommand", None)
-        if subcommand == "list":
-            list_available_commands(paths)
-        elif subcommand == "enable":
-            enable_command(paths, getattr(args, "name", None))
-        elif subcommand == "disable":
-            disable_command(paths, getattr(args, "name", None))
-        else:
-            manage_commands(paths)
-        return
+#     if command == "command":
+#         ui.clear_screen()
+#         subcommand = getattr(args, "subcommand", None)
+#         if subcommand == "list":
+#             list_available_commands(paths)
+#         elif subcommand == "enable":
+#             enable_command(paths, getattr(args, "name", None))
+#         elif subcommand == "disable":
+#             disable_command(paths, getattr(args, "name", None))
+#         else:
+#             manage_commands(paths)
+#         return
 
-    if command == "agent":
-        ui.clear_screen()
-        subcommand = getattr(args, "subcommand", None)
-        if subcommand == "list":
-            list_available_agents(paths)
-        elif subcommand == "enable":
-            enable_agent(paths, getattr(args, "name", None))
-        elif subcommand == "disable":
-            disable_agent(paths, getattr(args, "name", None))
-        else:
-            manage_agents(paths)
-        return
+#     if command == "agent":
+#         ui.clear_screen()
+#         subcommand = getattr(args, "subcommand", None)
+#         if subcommand == "list":
+#             list_available_agents(paths)
+#         elif subcommand == "enable":
+#             enable_agent(paths, getattr(args, "name", None))
+#         elif subcommand == "disable":
+#             disable_agent(paths, getattr(args, "name", None))
+#         else:
+#             manage_agents(paths)
+#         return
 
-    ui.clear_screen()
-    run_menu(paths)
+#     ui.clear_screen()
+#     run_menu(paths)
 
 
 def _github_token(cli_token: str | None = None) -> str | None:
@@ -237,119 +228,6 @@ def _format_rate_limit_error(status_code: int, headers: httpx.Headers, url: str)
 
 
 SCRIPT_TYPE_CHOICES = {"sh": "POSIX Shell (bash/zsh)", "ps": "PowerShell"}
-
-CLAUDE_LOCAL_PATH = Path.home() / ".claude" / "local" / "claude"
-
-BANNER = """
-/|     █████ █████ ████     █████       █████       |\\
-||    ░░███ ░░███ ░░███   ███░░░███   ███░░░███     ||
-||     ░░███ ███   ░███  ███   ░░███ ███   ░░███    ||
-||      ░░█████    ░███ ░███    ░███░███    ░███    ||
-||       ███░███   ░███ ░███    ░███░███    ░███    ||
-||      ███ ░░███  ░███ ░░███   ███ ░░███   ███     ||
-||     █████ █████ █████ ░░░█████░   ░░░█████░      ||
-\\|    ░░░░░ ░░░░░ ░░░░░    ░░░░░░      ░░░░░░       |/"""
-
-TAGLINE = "x100 - Create high-grade software at speed with AI agents"
-
-
-class StepTracker:
-    """Track and render hierarchical steps without emojis, similar to Claude Code tree output.
-    Supports live auto-refresh via an attached refresh callback.
-    """
-
-    def __init__(self, title: str):
-        self.title = title
-        self.steps = []  # list of dicts: {key, label, status, detail}
-        self.status_order = {
-            "pending": 0,
-            "running": 1,
-            "done": 2,
-            "error": 3,
-            "skipped": 4,
-        }
-        self._refresh_cb = None  # callable to trigger UI refresh
-
-    def attach_refresh(self, cb):
-        self._refresh_cb = cb
-
-    def add(self, key: str, label: str):
-        if key not in [s["key"] for s in self.steps]:
-            self.steps.append(
-                {"key": key, "label": label, "status": "pending", "detail": ""}
-            )
-            self._maybe_refresh()
-
-    def start(self, key: str, detail: str = ""):
-        self._update(key, status="running", detail=detail)
-
-    def complete(self, key: str, detail: str = ""):
-        self._update(key, status="done", detail=detail)
-
-    def error(self, key: str, detail: str = ""):
-        self._update(key, status="error", detail=detail)
-
-    def skip(self, key: str, detail: str = ""):
-        self._update(key, status="skipped", detail=detail)
-
-    def _update(self, key: str, status: str, detail: str):
-        for s in self.steps:
-            if s["key"] == key:
-                s["status"] = status
-                if detail:
-                    s["detail"] = detail
-                self._maybe_refresh()
-                return
-
-        self.steps.append(
-            {"key": key, "label": key, "status": status, "detail": detail}
-        )
-        self._maybe_refresh()
-
-    def _maybe_refresh(self):
-        if self._refresh_cb:
-            try:
-                self._refresh_cb()
-            except Exception:
-                pass
-
-    def render(self):
-        tree = Tree(f"[cyan]{self.title}[/cyan]", guide_style="grey50")
-        for step in self.steps:
-            label = step["label"]
-            detail_text = step["detail"].strip() if step["detail"] else ""
-
-            status = step["status"]
-            if status == "done":
-                symbol = "[green]●[/green]"
-            elif status == "pending":
-                symbol = "[green dim]○[/green dim]"
-            elif status == "running":
-                symbol = "[cyan]○[/cyan]"
-            elif status == "error":
-                symbol = "[red]●[/red]"
-            elif status == "skipped":
-                symbol = "[yellow]○[/yellow]"
-            else:
-                symbol = " "
-
-            if status == "pending":
-                # Entire line light gray (pending)
-                if detail_text:
-                    line = (
-                        f"{symbol} [bright_black]{label} ({detail_text})[/bright_black]"
-                    )
-                else:
-                    line = f"{symbol} [bright_black]{label}[/bright_black]"
-            else:
-                # Label white, detail (if any) light gray in parentheses
-                if detail_text:
-                    line = f"{symbol} [white]{label}[/white] [bright_black]({detail_text})[/bright_black]"
-                else:
-                    line = f"{symbol} [white]{label}[/white]"
-
-            tree.add(line)
-        return tree
 
 
 def get_key():
@@ -458,9 +336,6 @@ def select_with_arrows(
     return selected_key
 
 
-console = Console()
-
-
 class BannerGroup(TyperGroup):
     """Custom group that shows banner before help."""
 
@@ -477,28 +352,6 @@ app = typer.Typer(
     invoke_without_command=True,
     cls=BannerGroup,
 )
-
-
-def show_banner():
-    """Display the ASCII art banner."""
-    banner_lines = BANNER.strip().split("\n")
-    colors = [
-        "orange_red1",
-        "dark_orange",
-        "orange1",
-        "orange1",
-        "wheat1",
-        "light_goldenrod1",
-    ]
-
-    styled_banner = Text()
-    for i, line in enumerate(banner_lines):
-        color = colors[i % len(colors)]
-        styled_banner.append(line + "\n", style=color)
-
-    console.print(Align.center(styled_banner))
-    console.print(Align.center(Text(TAGLINE, style="italic orange_red1")))
-    console.print()
 
 
 @app.callback()
@@ -540,38 +393,6 @@ def run_command(
                 console.print(f"[red]Error output:[/red] {e.stderr}")
             raise
         return None
-
-
-def check_tool(tool: str, tracker: StepTracker = None) -> bool:
-    """Check if a tool is installed. Optionally update tracker.
-
-    Args:
-        tool: Name of the tool to check
-        tracker: Optional StepTracker to update with results
-
-    Returns:
-        True if tool is found, False otherwise
-    """
-    # Special handling for Claude CLI after `claude migrate-installer`
-    # See: https://github.com/github/spec-kit/issues/123
-    # The migrate-installer command REMOVES the original executable from PATH
-    # and creates an alias at ~/.claude/local/claude instead
-    # This path should be prioritized over other claude executables in PATH
-    if tool == "claude":
-        if CLAUDE_LOCAL_PATH.exists() and CLAUDE_LOCAL_PATH.is_file():
-            if tracker:
-                tracker.complete(tool, "available")
-            return True
-
-    found = shutil.which(tool) is not None
-
-    if tracker:
-        if found:
-            tracker.complete(tool, "available")
-        else:
-            tracker.error(tool, "not found")
-
-    return found
 
 
 def is_git_repo(path: Path = None) -> bool:
@@ -764,7 +585,7 @@ def download_template_from_github(
         raise typer.Exit(1)
 
     assets = release_data.get("assets", [])
-    pattern = f"spec-kit-template-{ai_assistant}-{script_type}"
+    pattern = f"x100-template-{ai_assistant}-{script_type}"
     matching_assets = [
         asset
         for asset in assets
@@ -942,7 +763,7 @@ def download_and_extract_template(
                             tracker.complete("flatten")
                         elif verbose:
                             console.print(
-                                f"[cyan]Found nested directory structure[/cyan]"
+                                "[cyan]Found nested directory structure[/cyan]"
                             )
 
                     for item in source_dir.iterdir():
@@ -1309,7 +1130,7 @@ def init(
 
     tracker = StepTracker("Initialize x100 Project")
 
-    sys._specify_tracker_active = True
+    sys._x100_tracker_active = True
 
     tracker.add("precheck", "Check required tools")
     tracker.complete("precheck", "ok")
@@ -1465,14 +1286,12 @@ def init(
     steps_lines.append(f"{step_num}. Start using slash commands with your AI agent:")
 
     steps_lines.append(
-        "   2.1 [cyan]/speckit.constitution[/] - Establish project principles"
+        "   2.1 [cyan]/x100.constitution[/] - Establish project principles"
     )
-    steps_lines.append(
-        "   2.2 [cyan]/speckit.specify[/] - Create baseline specification"
-    )
-    steps_lines.append("   2.3 [cyan]/speckit.plan[/] - Create implementation plan")
-    steps_lines.append("   2.4 [cyan]/speckit.tasks[/] - Generate actionable tasks")
-    steps_lines.append("   2.5 [cyan]/speckit.implement[/] - Execute implementation")
+    steps_lines.append("   2.2 [cyan]/x100.specify[/] - Create baseline specification")
+    steps_lines.append("   2.3 [cyan]/x100.plan[/] - Create implementation plan")
+    steps_lines.append("   2.4 [cyan]/x100.tasks[/] - Generate actionable tasks")
+    steps_lines.append("   2.5 [cyan]/x100.implement[/] - Execute implementation")
 
     steps_panel = Panel(
         "\n".join(steps_lines), title="Next Steps", border_style="cyan", padding=(1, 2)
@@ -1483,9 +1302,9 @@ def init(
     enhancement_lines = [
         "Optional commands that you can use for your specs [bright_black](improve quality & confidence)[/bright_black]",
         "",
-        f"○ [cyan]/speckit.clarify[/] [bright_black](optional)[/bright_black] - Ask structured questions to de-risk ambiguous areas before planning (run before [cyan]/speckit.plan[/] if used)",
-        f"○ [cyan]/speckit.analyze[/] [bright_black](optional)[/bright_black] - Cross-artifact consistency & alignment report (after [cyan]/speckit.tasks[/], before [cyan]/speckit.implement[/])",
-        f"○ [cyan]/speckit.checklist[/] [bright_black](optional)[/bright_black] - Generate quality checklists to validate requirements completeness, clarity, and consistency (after [cyan]/speckit.plan[/])",
+        "○ [cyan]/x100.clarify[/] [bright_black](optional)[/bright_black] - Ask structured questions to de-risk ambiguous areas before planning (run before [cyan]/x100.plan[/] if used)",
+        "○ [cyan]/x100.analyze[/] [bright_black](optional)[/bright_black] - Cross-artifact consistency & alignment report (after [cyan]/x100.tasks[/], before [cyan]/x100.implement[/])",
+        "○ [cyan]/x100.checklist[/] [bright_black](optional)[/bright_black] - Generate quality checklists to validate requirements completeness, clarity, and consistency (after [cyan]/x100.plan[/])",
     ]
     enhancements_panel = Panel(
         "\n".join(enhancement_lines),
@@ -1497,19 +1316,77 @@ def init(
     console.print(enhancements_panel)
 
 
+def check_gh_scopes(*, tracker: StepTracker | None = None) -> bool:
+    """Check that gh CLI has required scopes."""
+    required_scopes = {"repo", "read:org", "workflow"}
+    try:
+        result = subprocess.run(
+            ["gh", "auth", "status", "--show-token"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        token_line = next(
+            (line for line in result.stdout.splitlines() if "- Token:" in line),
+            None,
+        )
+        if token_line is None:
+            raise RuntimeError("Could not find token line in gh auth status output")
+
+        token = token_line.split(":", 1)[1].strip()
+
+        # Check scopes via GitHub API
+        api_url = "https://api.github.com/"
+        headers = {"Authorization": f"token {token}"}
+        response = httpx.head(api_url, headers=headers, timeout=10)
+        response.raise_for_status()
+        scopes_header = response.headers.get("X-OAuth-Scopes", "")
+        granted_scopes = {scope.strip() for scope in scopes_header.split(",") if scope}
+
+        missing_scopes = required_scopes - granted_scopes
+        if missing_scopes:
+            if tracker:
+                tracker.error(
+                    "gh",
+                    f"missing scopes: {', '.join(sorted(missing_scopes))} - run `gh auth refresh -s <missing_scopes>` to add",
+                )
+            return False
+        else:
+            if tracker:
+                tracker.complete("gh", "all required scopes present")
+            return True
+    except Exception as e:
+        if tracker:
+            tracker.error("gh", str(e))
+        return False
+
+
 @app.command()
 def check():
     """Check that all required tools are installed."""
-    show_banner()
-    console.print("[bold]Checking for installed tools...[/bold]\n")
 
-    tracker = StepTracker("Check Available Tools")
+    tracker = StepTracker("Checklist")
 
+    # Check if is a x100 project
+    tracker.add("x100", "Is x100 project initialized?")
+    if is_x100_project(Path.cwd()):
+        tracker.complete("x100", "yes")
+    else:
+        tracker.error("x100", "no - run `x100 init` to initialize the project")
+
+    # Check git availability
     tracker.add("git", "Git version control")
     git_ok = check_tool("git", tracker=tracker)
 
+    # Check gh availability
+    tracker.add("gh", "GitHub CLI")
+    gh_ok = check_tool("gh", tracker=tracker)
+
+    if gh_ok:
+        check_gh_scopes(tracker=tracker)
+
     agent_results = {}
-    for agent_key, agent_config in AGENT_CONFIG.items():
+    for agent_key, agent_config in X100_CONFIG.get("agents", {}).items():
         agent_name = agent_config["name"]
         requires_cli = agent_config["requires_cli"]
 
@@ -1524,14 +1401,16 @@ def check():
 
     # Check VS Code variants (not in agent config)
     tracker.add("code", "Visual Studio Code")
-    code_ok = check_tool("code", tracker=tracker)
+    check_tool("code", tracker=tracker)
 
-    tracker.add("code-insiders", "Visual Studio Code Insiders")
-    code_insiders_ok = check_tool("code-insiders", tracker=tracker)
+    # Check README.md presence
+    tracker.add("readme", "Presence of README.md")
+    check_file("readme", Path.cwd() / "README.md", tracker=tracker)
 
+    # Check AGENTS.md presence
+    tracker.add("agents_md", "Presence of AGENTS.md")
+    check_file("agents_md", Path.cwd() / "AGENTS.md", tracker=tracker)
     console.print(tracker.render())
-
-    console.print("\n[bold green]x100 CLI is ready to use![/bold green]")
 
     if not git_ok:
         console.print("[dim]Tip: Install git for repository management[/dim]")
@@ -1540,10 +1419,46 @@ def check():
         console.print("[dim]Tip: Install an AI assistant for the best experience[/dim]")
 
 
-def is_x100_project(path: Path) -> bool:
-    """Check if the given path is an x100 project (contains .x100 folder)."""
-    x100_dir = path / ".x100"
-    return x100_dir.is_dir()
+# @app.command(hidden=True)
+# def legacy_check():
+#     """Check that all required tools are installed."""
+#     # console.print("[bold]Checking for installed tools...[/bold]\n")
+
+#     tracker = StepTracker("Check Available Tools")
+
+#     tracker.add("git", "Git version control")
+#     git_ok = check_tool("git", tracker=tracker)
+
+#     agent_results = {}
+#     for agent_key, agent_config in AGENT_CONFIG.items():
+#         agent_name = agent_config["name"]
+#         requires_cli = agent_config["requires_cli"]
+
+#         tracker.add(agent_key, agent_name)
+
+#         if requires_cli:
+#             agent_results[agent_key] = check_tool(agent_key, tracker=tracker)
+#         else:
+#             # IDE-based agent - skip CLI check and mark as optional
+#             tracker.skip(agent_key, "IDE-based, no CLI check")
+#             agent_results[agent_key] = False  # Don't count IDE agents as "found"
+
+#     # Check VS Code variants (not in agent config)
+#     tracker.add("code", "Visual Studio Code")
+#     code_ok = check_tool("code", tracker=tracker)
+
+#     tracker.add("code-insiders", "Visual Studio Code Insiders")
+#     code_insiders_ok = check_tool("code-insiders", tracker=tracker)
+
+#     console.print(tracker.render())
+
+#     console.print("\n[bold green]x100 CLI is ready to use![/bold green]")
+
+#     if not git_ok:
+#         console.print("[dim]Tip: Install git for repository management[/dim]")
+
+#     if not any(agent_results.values()):
+#         console.print("[dim]Tip: Install an AI assistant for the best experience[/dim]")
 
 
 @app.command()
@@ -1553,7 +1468,7 @@ def status():
     project_path = Path.cwd()
     if not is_x100_project(project_path):
         console.print(
-            f"[red]Error:[/red] Current directory is not an x100 project ({project_path})"
+            f"[red]Error:[/red] Current directory is not recognized as a x100 project ({project_path})"
         )
         raise typer.Exit(1)
 
@@ -1567,20 +1482,27 @@ def status():
     else:
         git_node.add("[red]Not initialized[/red]")
 
-    agent_node = status_tree.add("AI Assistant Tools")
-    for agent_key, agent_config in AGENT_CONFIG.items():
-        agent_name = agent_config["name"]
-        requires_cli = agent_config["requires_cli"]
-        if requires_cli:
-            if check_tool(agent_key):
-                agent_node.add(f"[green]{agent_name} detected[/green]")
-            else:
-                agent_node.add(f"[red]{agent_name} not found[/red]")
-        else:
-            agent_node.add(f"[dim]{agent_name} (IDE-based, no CLI check)[/dim]")
+    # agent_node = status_tree.add("AI Assistant Tools")
+    # for agent_key, agent_config in AGENT_CONFIG.items():
+    #     agent_name = agent_config["name"]
+    #     requires_cli = agent_config["requires_cli"]
+    #     if requires_cli:
+    #         if check_tool(agent_key):
+    #             agent_node.add(f"[green]{agent_name} detected[/green]")
+    #         else:
+    #             agent_node.add(f"[red]{agent_name} not found[/red]")
+    #     else:
+    #         agent_node.add(f"[dim]{agent_name} (IDE-based, no CLI check)[/dim]")
 
     console.print(status_tree)
     console.print("\n[bold green]Status check complete.[/bold green]")
+
+
+@app.command()
+def update():
+    show_banner()
+
+    return
 
 
 @app.command()
@@ -1675,6 +1597,7 @@ def initialize_project(ctx: typer.Context):
 
 
 def main():
+    """Entry point for the x100 CLI application."""
     app()
 
 
