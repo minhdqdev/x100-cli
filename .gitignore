@@ -1,35 +1,46 @@
-# By default, Claude Code generally respects .gitignore rules
-# for operations like Read() and Edit()
-
-# Environment variables
-**/*.env
-
-# Python venv
-**/.venv/
-**/__pycache__/
-**/*.pyc
-
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
 *.egg-info/
+.installed.cfg
+*.egg
 
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
 
-# Claude Code settings
-.claude/settings.json
-
-
-
-**/.vscode/**
-!**/.vscode/settings.example.json
-
-
-# macOS
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 .DS_Store
+*.tmp
 
-docs/
+# Project specific
+*.log
+.env
+.env.local
+*.lock
 
-
-tags
-
-
-config.json
-
-ref/
+# Spec Kit-specific files
+.genreleases/
+*.zip
+sdd-*/

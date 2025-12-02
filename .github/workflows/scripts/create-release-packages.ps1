@@ -212,13 +212,13 @@ function Build-Variant {
     New-Item -ItemType Directory -Path $baseDir -Force | Out-Null
     
     # Copy base structure but filter scripts by variant
-    $specDir = Join-Path $baseDir ".specify"
+    $specDir = Join-Path $baseDir ".x100"
     New-Item -ItemType Directory -Path $specDir -Force | Out-Null
     
     # Copy memory directory
     if (Test-Path "memory") {
         Copy-Item -Path "memory" -Destination $specDir -Recurse -Force
-        Write-Host "Copied memory -> .specify"
+        Write-Host "Copied memory -> .x100"
     }
     
     # Only copy the relevant script variant directory

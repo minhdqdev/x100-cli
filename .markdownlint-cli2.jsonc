@@ -1,30 +1,27 @@
 {
-  // Disable some built-in rules
+  // https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
   "config": {
-    "no-trailing-spaces": false,
-    "no-multiple-blanks": false,
-    "no-inline-html": false,
-    "line-length": {
-        "line_length": 200
+    "default": true,
+    "MD003": {
+      "style": "atx"
     },
-    "first-line-heading": false,
-    "no-alt-text": false,
-    "descriptive-link-text": false
+    "MD007": {
+      "indent": 2
+    },
+    "MD013": false,
+    "MD024": {
+      "siblings_only": true
+    },
+    "MD033": false,
+    "MD041": false,
+    "MD049": {
+      "style": "asterisk"
+    },
+    "MD050": {
+      "style": "asterisk"
+    }
   },
-
-  // Fix any fixable errors
-  "fix": true,
-
-  // Ignore files referenced by .gitignore (only valid at root)
-  "gitignore": true,
-
-  // Define glob expressions to use (only valid at root)
-  "globs": [
-    "!*bout.md"
-  ],
-
-  // Define glob expressions to ignore
   "ignores": [
-    "ignore*.md"
-  ],
+    ".genreleases/"
+  ]
 }

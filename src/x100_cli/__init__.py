@@ -437,7 +437,7 @@ def init_git_repo(
         subprocess.run(["git", "init"], check=True, capture_output=True, text=True)
         subprocess.run(["git", "add", "."], check=True, capture_output=True, text=True)
         subprocess.run(
-            ["git", "commit", "-m", "Initial commit from Specify template"],
+            ["git", "commit", "-m", "Initial commit from x100 template"],
             check=True,
             capture_output=True,
             text=True,
