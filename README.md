@@ -258,7 +258,7 @@ Use the workflow automation (recommended) or manually implement:
 
 - **Context engineering is king**: detailed specs, constraints, and guidelines to guide AI agents
 
-- **Intent-driven development** where specifications define the "_what_" before the "_how_"
+- **Intent-driven development** where specifications define the "*what*" before the "*how*"
 - **Heavy reliance** on advanced AI model capabilities for specification interpretation
 
 - **Human-in-the-loop** for critical thinking, creativity, and oversight

@@ -10,18 +10,22 @@
     },
     "MD009": false,
     "MD013": false,
+    "MD022": false,
     "MD024": {
       "siblings_only": true
     },
+    "MD032": false,
     "MD033": false,
     "MD041": false,
     "MD045": false,
+    "MD047": false,
     "MD049": {
       "style": "asterisk"
     },
     "MD050": {
       "style": "asterisk"
-    }
+    },
+    "MD059": false
   },
   "ignores": [
     ".genreleases/"
