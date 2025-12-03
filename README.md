@@ -43,12 +43,10 @@ with spec-driven development.
 ### 🔧 Prerequisites
 
 - **Linux/macOS** (or WSL2 on Windows)
-- **Claude Code** (recommended) or other AI coding agents: [OpenAI Codex](https://openai.com/codex/), 
-[GitHub Copilot](https://code.visualstudio.com/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), 
-or [Cursor](https://cursor.sh/)
 - **[uv](https://docs.astral.sh/uv/)** for Python package management - 
 Install: `brew install uv` (macOS) or `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - **Git** installed
+- **AI Assistant** - Choose from: GitHub Copilot, Claude Code, Gemini CLI, Cursor, Windsurf, Amazon Q Developer, or others (see supported agents below)
 - Basic familiarity with Markdown and shell scripting
 
 ### Quick Start (5 minutes)
@@ -56,25 +54,25 @@ Install: `brew install uv` (macOS) or `curl -LsSf https://astral.sh/uv/install.s
 **First time using x100?** Start here:
 
 ```bash
-# 1. Try it out in a test directory
-mkdir x100-test && cd x100-test
-git clone https://github.com/minhdqdev/x100-cli.git .x100
-chmod +x .x100/x100
-./.x100/x100 init
+# 1. Install x100 CLI
+pip install x100-cli
 
-# 2. Setup Claude Code and enable workflow
-./.x100/x100  # Select "Setup AI Agent" → "Claude Code"
-./.x100/x100 workflow-enable
+# Or use uvx (no installation needed)
+uvx x100-cli init my-project
 
-# 3. Test with example feature (in Claude Code)
-/workflow docs/user-stories/US-001-example-feature.md
+# 2. Initialize a new project with your preferred AI assistant
+x100 init my-project --ai copilot  # or claude, gemini, cursor-agent, etc.
+
+# 3. Start building with AI commands
+cd my-project
+# Use /x100.specify, /x100.plan, /x100.implement commands in your AI assistant
 ```
 
 **Troubleshooting:**
 
-- `uv not found`: `brew install uv` (macOS) or `curl -LsSf https://astral.sh/uv/install.sh | sh`
-- Commands not showing: `./x100 workflow-enable` and restart Claude Code
-- Permission denied: `chmod +x .x100/x100`
+- `x100 not found`: Install with `pip install x100-cli` or use `uvx x100-cli`
+- Permission errors: Run `chmod +x scripts/*.sh` in the project directory
+- Git errors: Ensure git is installed and configured
 
 ### Setup Options for Your Project
 
@@ -83,129 +81,97 @@ Choose one of the following based on your needs:
 #### Option 1: Bootstrap a new project
 
 ```bash
-cd your-project-name
+# Using pip (recommended)
+pip install x100-cli
+x100 init my-project --ai copilot  # Choose your AI assistant
 
-# Clone the template repository to .x100 (directory name is important)
-git clone https://github.com/minhdqdev/x100-cli.git .x100
-chmod +x .x100/scripts/*.sh
-chmod +x .x100/x100
-ln -s .x100/x100 x100  # optional symlink for easier access
-bash .x100/x100 init
+# Or using uvx (no installation)
+uvx x100-cli init my-project --ai claude
+
+# Or initialize in current directory
+x100 init --here --ai gemini
 ```
 
-If your project uses Git, you may want to add this template as a submodule for your code:
+Available AI assistants: `copilot`, `claude`, `gemini`, `cursor-agent`, `qwen`, `opencode`, `codex`, `windsurf`, `kilocode`, `auggie`, `codebuddy`, `roo`, `q`, `amp`, `shai`, `bob`
 
-```bash
-git submodule add -b <branch_name> <repo_url> .x100
-```
-
-That's it! You can now start defining your project idea in `docs/IDEA.md` 
-and use the AI agent commands to generate refined ideas, PRDs, implementation plans, code, and tests.
-
-Read more in the [Use the template](#use-the-template) section below.
+That's it! You can now start using the AI agent commands to build your project with spec-driven development.
 
 **Checkpoint**: You should now have a project structure similar to this:
 
 ```bash
-your-project-name/
+my-project/
 ├── .git/
 ├── .vscode/
-│   ├── settings.json
-├── .copilot/  (if using GitHub Copilot)
-├── .claude/   (if using Claude Code)
-├── .gemini/   (if using Gemini CLI)
-├── .cursor/   (if using Cursor)
+│   └── settings.json
+├── .github/      (if using GitHub Copilot)
+├── .claude/      (if using Claude Code)
+├── .gemini/      (if using Gemini CLI)
+├── .cursor/      (if using Cursor)
+├── .windsurf/    (if using Windsurf)
+├── .amazonq/     (if using Amazon Q)
 ├── .x100/
-│   ├── resources/
+│   ├── steering/     # AI context files
 │   ├── scripts/
-│   ├── config.json
-│   └── ...
+│   └── config.json
 ├── src/
-│   ├── frontend/
-│   └── backend/
-│   └── ...
 ├── docs/
-└── ...
+├── AGENTS.md         # AI agent configuration
+└── README.md
 ```
 
 ## Use the template
 
-### Setup for Claude Code
+### Supported AI Agents
 
-After initializing the project, setup Claude Code integration:
+x100 CLI supports the following AI assistants:
 
-```bash
-# Run x100 setup tool
-./x100
+| Agent | Type | CLI Tool | Installation |
+|-------|------|----------|--------------|
+| **GitHub Copilot** | IDE | - | Built into VS Code |
+| **Claude Code** | CLI | `claude` | [Setup Guide](https://docs.anthropic.com/en/docs/claude-code/setup) |
+| **Gemini CLI** | CLI | `gemini` | [GitHub](https://github.com/google-gemini/gemini-cli) |
+| **Cursor** | IDE | - | [cursor.sh](https://cursor.sh/) |
+| **Windsurf** | IDE | - | [windsurf.com](https://windsurf.com/) |
+| **Amazon Q Developer** | CLI | `q` | [AWS Q CLI](https://aws.amazon.com/developer/learning/q-developer-cli/) |
+| **Qwen Code** | CLI | `qwen` | [GitHub](https://github.com/QwenLM/qwen-code) |
+| **opencode** | CLI | `opencode` | [opencode.ai](https://opencode.ai) |
+| **Codex CLI** | CLI | `codex` | [GitHub](https://github.com/openai/codex) |
+| **Kilo Code** | IDE | - | IDE-based |
+| **Auggie CLI** | CLI | `auggie` | [Docs](https://docs.augmentcode.com/cli/setup-auggie/install-auggie-cli) |
+| **CodeBuddy** | CLI | `codebuddy` | [codebuddy.ai](https://www.codebuddy.ai/cli) |
+| **Roo Code** | IDE | - | IDE-based |
+| **Amp** | CLI | `amp` | [Manual](https://ampcode.com/manual#install) |
+| **SHAI** | CLI | `shai` | [GitHub](https://github.com/ovh/shai) |
+| **IBM Bob** | IDE | - | IDE-based |
 
-# Select "Setup AI Agent" → "Claude Code"
-# This will copy commands and agents to .claude/ directory
+### Basic Workflow
 
-# Enable workflow automation (recommended)
-./x100 workflow-enable
-```
+The spec-driven development workflow with x100:
 
-Or use CLI commands directly:
-
-```bash
-# Setup Claude Code
-./x100  # Select option 3 "Setup AI Agent" → "Claude Code"
-
-# Enable workflow automation
-./x100 workflow-enable
-```
-
-### Workflow Automation (Recommended)
-
-x100 includes a complete workflow automation system. See [Workflow Quick Start](./resources/WORKFLOW_QUICKSTART.md).
-
-**Quick Start:**
+**Step-by-step approach:**
 
 ```bash
-# Enable workflow
-./x100 workflow-enable
+# 1. Create project constitution (principles and constraints)
+Use AI command: /x100.constitution
 
-# In Claude Code, run complete workflow
-/workflow docs/user-stories/US-001-feature.md
+# 2. Write baseline specification
+Use AI command: /x100.specify
+
+# 3. Create implementation plan
+Use AI command: /x100.plan
+
+# 4. Generate actionable tasks
+Use AI command: /x100.tasks
+
+# 5. Implement features
+Use AI command: /x100.implement
 ```
 
-**Available workflow commands:**
+**Optional enhancement commands:**
 
-| Command     | Description                                |
-| ----------- | ------------------------------------------ |
-| `/start`    | Start feature development from user story  |
-| `/spec`     | Create technical specification             |
-| `/code`     | Implement code from spec                   |
-| `/test`     | Create and run tests                       |
-| `/review`   | Comprehensive code review                  |
-| `/done`     | Complete feature and commit                |
-| `/workflow` | **Full automation** - runs all steps above |
-
-**Step-by-step workflow:**
-
-```plain
-/start US-001 → /code → /test → /review → /done
-```
-
-**Examples:**
-
-```bash
-# Full automation
-/workflow docs/user-stories/US-002-your-feature.md
-
-# Quick bug fix
-/code "Fix authentication timeout bug"
-/test
-/review
-/done "fix: resolve auth timeout issue"
-
-# After manual coding
-/review
-/test
-/done
-```
-
-For detailed workflow guide, see [resources/WORKFLOW.md](./resources/WORKFLOW.md)
+- `/x100.clarify` - Ask structured questions before planning
+- `/x100.analyze` - Cross-artifact consistency check
+- `/x100.checklist` - Generate quality validation checklists
 
 ### AI Steering Files
 
@@ -312,51 +278,52 @@ x100 nextstep --github-repo owner/repo --github-token $GITHUB_TOKEN
 
 See [docs/NEXTSTEP_FEATURE_PLAN.md](./docs/NEXTSTEP_FEATURE_PLAN.md) for complete documentation.
 
-### Traditional Approach (Idea → PRD → User Stories)
+### CLI Commands
 
-#### Refine your idea
-
-1. Define your project idea in `docs/IDEA.md`.
-2. Use AI agent command: `/refine-idea`
-3. Review and edit the refined idea in `docs/REFINED_IDEA.md`
-
-#### From refined idea to PRD
-
-1. Use AI agent command: `/generate-prd`
-2. Review and edit the generated PRD in `docs/PRD.md`
-
-#### From PRD to product backlog
-
-1. Use AI agent command: `/generate-product-backlog`
-2. Review and edit the generated product backlog in `docs/PRODUCT_BACKLOG.md`
-
-#### From product backlog to user stories
-
-1. Use AI agent command: `/generate-user-stories`
-2. Review and edit the generated user stories in `docs/user-stories/US-<ID>.md`
-
-#### From user stories to code
-
-Use the workflow automation (recommended) or manually implement:
-
-1. Use `/workflow` for full automation
-2. Or use step-by-step: `/start` → `/code` → `/test` → `/review` → `/done`
-
-### Managing Commands & Agents
+x100 provides several commands to manage your project:
 
 ```bash
-# List available commands and agents
-./x100 command list
-./x100 agent list
+# Initialize a new project
+x100 init my-project --ai copilot
 
-# Enable/disable specific items
-./x100 command enable <name>
-./x100 command disable <name>
-./x100 agent enable <name>
-./x100 agent disable <name>
+# Initialize in current directory
+x100 init --here --ai claude
 
-# Interactive management
-./x100  # Select "Manage Commands" or "Manage Agents"
+# Check project health and get next steps
+x100 nextstep
+x100 nextstep --verbose
+x100 nextstep --github-repo owner/repo --github-token $GITHUB_TOKEN
+
+# Check tool installation
+x100 check
+
+# View project status
+x100 status
+
+# Show version information
+x100 version
+```
+
+### Additional Options
+
+```bash
+# Skip git initialization
+x100 init my-project --ai copilot --no-git
+
+# Skip agent tool checks
+x100 init my-project --ai claude --ignore-agent-tools
+
+# Force merge when using --here in non-empty directory
+x100 init --here --ai gemini --force
+
+# Specify script type (sh or ps)
+x100 init my-project --ai cursor-agent --script ps
+
+# Debug mode
+x100 init my-project --ai windsurf --debug
+
+# Use GitHub token for API requests
+x100 init my-project --ai q --github-token $GITHUB_TOKEN
 ```
 
 ## 📚 Core philosophy
@@ -388,18 +355,14 @@ Contributors:
 
 ## 🤝 Contributing
 
-If you have integrated this template into your project, please consider contributing back any improvements to 
-the original [x100-cli](https://github.com/minhdqdev/x100-cli). We have provided a very convenient way to help you do so, just run:
+We welcome contributions! Please see our [Contributing Guide](./.github/CONTRIBUTING.md) for details on:
 
-```bash
-./x100 contribute
-```
+- How to submit bug reports and feature requests
+- Setting up your development environment
+- Code style and testing requirements
+- Pull request process
 
-You need to install `gh` CLI and authenticate it with your GitHub account first. 
-This command will create a fork of the original repository, commit your changes to a new branch, 
-and open a pull request for you.
-
-Read more in the [Contributing Guide](./.github/CONTRIBUTING.md).
+For questions or support, open a [GitHub issue](https://github.com/minhdqdev/x100-cli/issues/new).
 
 ## 💬 Support
 
