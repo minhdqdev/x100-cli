@@ -261,6 +261,57 @@ x100 automatically creates an `AGENTS.md` file in your project root following th
 
 The `AGENTS.md` file is recognized by many AI coding assistants and complements the steering files by providing task-specific guidance.
 
+### Project Health Analysis
+
+Use `x100 nextstep` to get AI-powered project analysis and recommendations:
+
+```bash
+# Basic analysis
+x100 nextstep
+
+# Detailed analysis with statistics
+x100 nextstep --verbose
+
+# JSON output for automation
+x100 nextstep --format json
+
+# With GitHub integration
+x100 nextstep --github-repo owner/repo --github-token $GITHUB_TOKEN
+```
+
+**The command analyzes:**
+- 📊 Codebase health (files, lines, TODOs, FIXMEs)
+- 📝 Git activity and velocity
+- 🧪 Test coverage
+- 📋 GitHub issues and PRs (optional)
+
+**It provides:**
+- 📈 Project health score (0-100)
+- 🔴 Blockers and risks
+- 🔍 Gaps and inconsistencies
+- 💡 Prioritized next steps
+
+**Example output:**
+```
+📈 Project Health: 72/100 (Good)
+
+🔴 Blockers & Risks
+  • Low test coverage (45%)
+  
+🔍 Gaps Detected
+  ⚠  Quality Gap: payment_processor.py: No tests (high risk)
+
+💡 Recommended Next Steps
+
+🎯 NOW:
+  1. Increase test coverage to >60%
+     • Rationale: Current coverage is critically low
+     • Impact: Reduces production risk
+     • Effort: 4-8 hours
+```
+
+See [docs/NEXTSTEP_FEATURE_PLAN.md](./docs/NEXTSTEP_FEATURE_PLAN.md) for complete documentation.
+
 ### Traditional Approach (Idea → PRD → User Stories)
 
 #### Refine your idea

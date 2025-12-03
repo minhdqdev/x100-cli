@@ -1744,6 +1744,274 @@ def initialize_project(ctx: typer.Context):
     raise typer.Exit(ctx.invoke(init))
 
 
+@app.command()
+def nextstep(
+    ctx: typer.Context,
+    verbose: bool = typer.Option(
+        False,
+        "--verbose",
+        "-v",
+        help="Show detailed analysis",
+    ),
+    format: str = typer.Option(
+        "rich",
+        "--format",
+        "-f",
+        help="Output format: rich, json, markdown",
+    ),
+    github_token: str = typer.Option(
+        None,
+        "--github-token",
+        help="GitHub token (or set GITHUB_TOKEN env var)",
+    ),
+    github_repo: str = typer.Option(
+        None,
+        "--github-repo",
+        help="GitHub repository (owner/repo)",
+    ),
+):
+    """
+    Analyze project health and suggest next steps.
+    
+    This command acts as an AI Project Manager/Tech Lead to:
+    - Analyze codebase health and progress
+    - Check git activity and velocity
+    - Identify blockers, gaps, and risks
+    - Recommend prioritized next steps
+    
+    Examples:
+        x100 nextstep
+        x100 nextstep --verbose
+        x100 nextstep --format json
+        x100 nextstep --github-repo owner/repo --github-token $GITHUB_TOKEN
+    """
+    from .nextstep import (
+        CodeAnalyzer,
+        GitAnalyzer,
+        TestAnalyzer,
+        NextStepAgent,
+    )
+    from .nextstep.integrations import GitHubIntegration
+    
+    show_banner()
+    
+    project_path = Path.cwd()
+    
+    console.print("[cyan]Analyzing project...[/cyan]\n")
+    
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        # 1. Code analysis
+        task = progress.add_task("📊 Analyzing codebase...", total=None)
+        code_analyzer = CodeAnalyzer(project_path)
+        code_analysis = code_analyzer.analyze()
+        progress.remove_task(task)
+        
+        # 2. Git analysis
+        task = progress.add_task("📝 Analyzing git history...", total=None)
+        git_analyzer = GitAnalyzer(project_path)
+        git_analysis = git_analyzer.analyze()
+        progress.remove_task(task)
+        
+        # 3. Test analysis
+        task = progress.add_task("🧪 Analyzing tests...", total=None)
+        test_analyzer = TestAnalyzer(project_path)
+        test_analysis = test_analyzer.analyze()
+        progress.remove_task(task)
+        
+        # 4. GitHub integration (optional)
+        project_status = None
+        if github_repo:
+            task = progress.add_task("📋 Fetching GitHub status...", total=None)
+            token = github_token or os.getenv("GITHUB_TOKEN")
+            if token:
+                try:
+                    github_integration = GitHubIntegration(token, github_repo)
+                    project_status = github_integration.get_project_status()
+                except Exception as e:
+                    console.print(f"[yellow]Warning: GitHub integration failed: {e}[/yellow]")
+            else:
+                console.print("[yellow]Warning: GitHub token not provided[/yellow]")
+            progress.remove_task(task)
+        
+        # 5. AI analysis
+        task = progress.add_task("🤖 Generating recommendations...", total=None)
+        agent = NextStepAgent()
+        recommendations = agent.analyze_and_recommend(
+            code_analysis,
+            git_analysis,
+            test_analysis,
+            project_status,
+        )
+        progress.remove_task(task)
+    
+    console.print()
+    
+    # Display results based on format
+    if format == "json":
+        import json
+        output = {
+            "health_score": recommendations.health_score.overall,
+            "health_summary": recommendations.health_score.summary,
+            "blockers": [
+                {
+                    "title": b.title,
+                    "impact": b.impact,
+                    "source": b.source,
+                }
+                for b in recommendations.blockers
+            ],
+            "gaps": [
+                {
+                    "category": g.category,
+                    "description": g.description,
+                    "severity": g.severity,
+                }
+                for g in recommendations.gaps
+            ],
+            "next_steps": [
+                {
+                    "priority": s.priority,
+                    "action": s.action,
+                    "rationale": s.rationale,
+                    "impact": s.impact,
+                    "effort": s.effort,
+                }
+                for s in recommendations.next_steps
+            ],
+        }
+        console.print_json(data=output)
+    else:
+        # Rich console output
+        _display_nextstep_report(
+            recommendations,
+            code_analysis,
+            git_analysis,
+            test_analysis,
+            verbose,
+            github_repo,
+        )
+
+
+def _display_nextstep_report(
+    recommendations,
+    code_analysis,
+    git_analysis,
+    test_analysis,
+    verbose,
+    github_repo=None,
+):
+    """Display formatted nextstep report."""
+    from rich.text import Text
+    
+    # Health Score
+    health = recommendations.health_score
+    
+    if health.overall >= 80:
+        score_color = "green"
+        emoji = "🎉"
+    elif health.overall >= 70:
+        score_color = "cyan"
+        emoji = "✅"
+    elif health.overall >= 60:
+        score_color = "yellow"
+        emoji = "⚠️"
+    else:
+        score_color = "red"
+        emoji = "🔴"
+    
+    health_panel = Panel(
+        f"[bold {score_color}]{health.overall}/100[/bold {score_color}] - {health.summary}\n\n"
+        f"  • Velocity: {health.velocity_score}/100\n"
+        f"  • Quality: {health.quality_score}/100\n"
+        f"  • Blockers: {health.blocker_score}/100\n"
+        f"  • Activity: {health.activity_score}/100",
+        title=f"{emoji} Project Health",
+        border_style=score_color,
+    )
+    console.print(health_panel)
+    console.print()
+    
+    # Detailed stats if verbose
+    if verbose:
+        stats_table = Table(show_header=False, box=None, padding=(0, 2))
+        stats_table.add_column("Metric", style="cyan")
+        stats_table.add_column("Value", style="white")
+        
+        stats_table.add_row("Files", str(code_analysis.file_count))
+        stats_table.add_row("Lines of Code", f"{code_analysis.line_count:,}")
+        stats_table.add_row("Python Files", str(code_analysis.python_files))
+        stats_table.add_row("JavaScript Files", str(code_analysis.javascript_files))
+        stats_table.add_row("TODO Markers", str(len(code_analysis.todos)))
+        stats_table.add_row("FIXME Markers", str(len(code_analysis.fixmes)))
+        
+        if test_analysis.coverage_percentage:
+            stats_table.add_row("Test Coverage", f"{test_analysis.coverage_percentage}%")
+        stats_table.add_row("Test Files", str(test_analysis.test_count))
+        
+        if git_analysis.is_git_repo:
+            stats_table.add_row("Commits (7d)", str(git_analysis.commit_count_7d))
+            stats_table.add_row("Commits (30d)", str(git_analysis.commit_count_30d))
+            stats_table.add_row("Commits/Day", str(git_analysis.commits_per_day))
+        
+        stats_panel = Panel(stats_table, title="📊 Detailed Statistics", border_style="cyan")
+        console.print(stats_panel)
+        console.print()
+    
+    # Blockers
+    if recommendations.blockers:
+        console.print("[bold red]🔴 Blockers & Risks[/bold red]\n")
+        for blocker in recommendations.blockers:
+            console.print(f"  • [red]{blocker.title}[/red]")
+            console.print(f"    [dim]Impact: {blocker.impact}[/dim]")
+            if verbose and blocker.details:
+                console.print(f"    [dim]{blocker.details}[/dim]")
+        console.print()
+    
+    # Gaps
+    if recommendations.gaps:
+        console.print("[bold yellow]🔍 Gaps Detected[/bold yellow]\n")
+        for gap in recommendations.gaps:
+            severity_color = "red" if gap.severity == "high" else "yellow"
+            console.print(f"  ⚠  [{severity_color}]{gap.category}:[/{severity_color}] {gap.description}")
+        console.print()
+    
+    # Next Steps
+    if recommendations.next_steps:
+        console.print("[bold cyan]💡 Recommended Next Steps[/bold cyan]\n")
+        
+        # Group by priority
+        priorities = ["NOW", "This Week", "Next Sprint"]
+        for priority in priorities:
+            steps = [s for s in recommendations.next_steps if s.priority == priority]
+            if steps:
+                if priority == "NOW":
+                    priority_emoji = "🎯"
+                    priority_color = "red"
+                elif priority == "This Week":
+                    priority_emoji = "🔄"
+                    priority_color = "yellow"
+                else:
+                    priority_emoji = "📅"
+                    priority_color = "cyan"
+                
+                console.print(f"[bold {priority_color}]{priority_emoji} {priority}:[/bold {priority_color}]")
+                for step in steps:
+                    console.print(f"\n  {step.order}. [cyan]{step.action}[/cyan]")
+                    console.print(f"     • Rationale: {step.rationale}")
+                    console.print(f"     • Impact: {step.impact}")
+                    console.print(f"     • Effort: {step.effort}")
+                console.print()
+    
+    # Footer
+    if not github_repo and not verbose:
+        console.print("[dim]Tip: Run with --verbose for detailed statistics[/dim]")
+        console.print("[dim]Tip: Add --github-repo owner/repo --github-token $GITHUB_TOKEN for GitHub integration[/dim]")
+
+
 def main():
     """Entry point for the x100 CLI application."""
     app()
