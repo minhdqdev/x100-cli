@@ -207,6 +207,60 @@ x100 includes a complete workflow automation system. See [Workflow Quick Start](
 
 For detailed workflow guide, see [resources/WORKFLOW.md](./resources/WORKFLOW.md)
 
+### AI Steering Files
+
+x100 includes a steering system that gives AI assistants persistent knowledge about your project. Instead of explaining conventions in every chat, steering files ensure AI consistently follows your patterns and standards.
+
+**Included steering files:**
+
+- **Foundation files** (always included):
+  - `product.md` - Product vision and goals
+  - `tech.md` - Technology stack
+  - `structure.md` - Project organization
+
+- **Strategy files** (conditionally included):
+  - `api-standards.md` - REST conventions, authentication
+  - `testing-standards.md` - Test patterns and coverage
+  - `code-conventions.md` - Naming and style guides
+  - `security-policies.md` - Security best practices
+  - `deployment-workflow.md` - Deployment procedures
+
+**Location:** `.x100/steering/`
+
+**How to use:**
+
+```bash
+# 1. Customize foundation files with your project details
+vi .x100/steering/product.md
+vi .x100/steering/tech.md
+vi .x100/steering/structure.md
+
+# 2. Refine strategy files to match your team's conventions
+vi .x100/steering/api-standards.md
+vi .x100/steering/testing-standards.md
+
+# 3. AI assistants will automatically reference these files
+# No need to re-explain your conventions!
+```
+
+Strategy files use conditional inclusion - they're automatically loaded when working with relevant file types. For example, `api-standards.md` is included when editing Python, TypeScript, or Go files.
+
+**Learn more:**
+- [Full Steering Documentation](./docs/STEERING.md)
+- See `.x100/steering/README.md` after initialization
+- Inspired by [Kiro's steering feature](https://kiro.dev/docs/steering/)
+
+### AGENTS.md Support
+
+x100 automatically creates an `AGENTS.md` file in your project root following the [AGENTS.md standard](https://agents.md/). This file provides AI agents with:
+
+- Project snapshot and key documentation locations
+- Reference to steering files for persistent knowledge
+- Workflow guidance for common tasks (coding, testing, documentation, code review)
+- Best practices and automation commands
+
+The `AGENTS.md` file is recognized by many AI coding assistants and complements the steering files by providing task-specific guidance.
+
 ### Traditional Approach (Idea → PRD → User Stories)
 
 #### Refine your idea

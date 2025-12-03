@@ -5,6 +5,7 @@
 > **Tip:** Link to supporting docs (Figma, Loom, ADRs) instead of duplicating content.
 
 ## 0. Quick Snapshot
+
 | Item | Details |
 | --- | --- |
 | DRI / Date |  |
@@ -21,6 +22,7 @@
 - **Assumptions to validate:** primary unknowns or leaps of faith.
 
 ## 2. Goals, Outcomes & Metrics
+
 | Metric (KPI) | Baseline | Target | Measurement source & frequency |
 | --- | --- | --- | --- |
 | e.g., Activation rate | 32% | 45% within 2 months | Amplitude dashboard `#123` (weekly) |
@@ -40,6 +42,7 @@
 
 ## 4. Scope & Requirements
 ### Prioritized backlog (MoSCoW or RICE order)
+
 | Priority | Description | Acceptance criteria / tests | DRI | Effort |
 | --- | --- | --- | --- | --- |
 | Must |  |  |  |  |

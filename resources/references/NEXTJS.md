@@ -24,11 +24,11 @@
 - Default to **Server Components**. They’re fast, bundle-free, and cache-friendly.
 - Use **Server Actions** for mutations (form posts, button clicks) when you don’t need a separate API client. Validate with **Zod** on the server boundary.
 - Prefer **fetch()** on the server with **Response caching**:
-    - Static data → `fetch(url, { next: { revalidate: 3600 } })`
+  - Static data → `fetch(url, { next: { revalidate: 3600 } })`
         
-    - Per-request fresh → `{ cache: 'no-store' }`
+  - Per-request fresh → `{ cache: 'no-store' }`
         
-    - Tag invalidation → `revalidateTag('user:123')` from server action after writes.
+  - Tag invalidation → `revalidateTag('user:123')` from server action after writes.
         
 - For DB access (Prisma), call in server components or server actions only. Never ship secrets client-side.
 

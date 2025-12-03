@@ -4,9 +4,9 @@
 
 - Use a two-tier layout: `repo/` → `src/` package + `deploy/` (docker, compose, k8s, terraform, scripts).
 - Split settings by environment with a single entrypoint:
-    - `src/config/settings/base.py`, `local.py`, `test.py`, `prod.py`.
+  - `src/config/settings/base.py`, `local.py`, `test.py`, `prod.py`.
 
-    - Select via `DJANGO_SETTINGS_MODULE=config.settings.prod`.
+  - Select via `DJANGO_SETTINGS_MODULE=config.settings.prod`.
 
 - Config via **environment variables** (12-Factor). Use `pydantic-settings` (or `django-environ`) to parse/validate envs early; fail fast.
 - Use **.env.example** + `Makefile` targets: `make up`, `make test`, `make fmt`, `make migrate`.
@@ -14,9 +14,9 @@
 ## 2. Security first
 
 - Turn on `SecurityMiddleware`; set:
-    - `SECURE_SSL_REDIRECT=True`, `SECURE_HSTS_SECONDS>=31536000`, `SECURE_HSTS_INCLUDE_SUBDOMAINS=True`, `SECURE_HSTS_PRELOAD=True`.
+  - `SECURE_SSL_REDIRECT=True`, `SECURE_HSTS_SECONDS>=31536000`, `SECURE_HSTS_INCLUDE_SUBDOMAINS=True`, `SECURE_HSTS_PRELOAD=True`.
 
-    - `SESSION_COOKIE_SECURE=True`, `CSRF_COOKIE_SECURE=True`, `SESSION_COOKIE_SAMESITE='Lax'` (or `Strict` if possible).
+  - `SESSION_COOKIE_SECURE=True`, `CSRF_COOKIE_SECURE=True`, `SESSION_COOKIE_SAMESITE='Lax'` (or `Strict` if possible).
 
 - Use **CSP** via `django-csp`. Start in report-only; tighten over time.
 - Prefer **Argon2** password hasher; enable Django password validators.
@@ -26,7 +26,7 @@
 ## 3. Apps, modules & boundaries
 
 - Create small, focused **Django apps** with clear domain boundaries. Typical baseline:
-    - `users`, `accounts` (billing/tenancy), `audit`, `notifications`, `api` (DRF), domain apps (e.g., `devices`, `events`, `analytics`).
+  - `users`, `accounts` (billing/tenancy), `audit`, `notifications`, `api` (DRF), domain apps (e.g., `devices`, `events`, `analytics`).
 
 - Keep **fat models, thin views**, and lift complex logic into **services** or **domain layer** modules (plain Python). Avoid putting business rules in views/serializers.
 - Introduce **repository/query** modules for complex ORM reads; keep views from growing SQL vines.
@@ -36,7 +36,7 @@
 - Use **PostgreSQL**. For time-series, Postgres + **TimescaleDB** is excellent.
 - Prefer **UUID primary keys** (`id = models.UUIDField(primary_key=True, default=uuid4, editable=False)`).
 - Enforce integrity with **database constraints**:
-    - `UniqueConstraint`, `CheckConstraint`, FK with `on_delete=PROTECT` (default to PROTECT; delete explicitly).
+  - `UniqueConstraint`, `CheckConstraint`, FK with `on_delete=PROTECT` (default to PROTECT; delete explicitly).
 
 - Add **composite indexes** and `Index(..., condition=Q(...))` for partial indexes.
 - Use **soft deletes** only if truly needed (and always filter by `alive` in managers).
@@ -58,21 +58,21 @@
 ## 6. APIs (DRF) & contracts
 
 - Use **Django REST Framework** with:
-    - ViewSets + routers (only where it maps well), else APIView.
+  - ViewSets + routers (only where it maps well), else APIView.
 
-    - Strict **serializers** (explicit fields), dataclasses/pydantic for nested business DTOs if helpful.
+  - Strict **serializers** (explicit fields), dataclasses/pydantic for nested business DTOs if helpful.
 
-    - **Pagination** by default; never return unbounded lists.
+  - **Pagination** by default; never return unbounded lists.
 
-    - **Validation**: DRF serializer validation + business validation in services (not in views).
+  - **Validation**: DRF serializer validation + business validation in services (not in views).
 
-    - **Versioning**: URL (`/api/v1/...`) or Accept header; never break V1 casually.
+  - **Versioning**: URL (`/api/v1/...`) or Accept header; never break V1 casually.
 
-    - **Schema**: `drf-spectacular` to export OpenAPI; publish a docs UI.
+  - **Schema**: `drf-spectacular` to export OpenAPI; publish a docs UI.
 
-    - **Auth**: session for web, **JWT (SimpleJWT)** or opaque tokens for API; rotate refresh tokens; add device-bound metadata.
+  - **Auth**: session for web, **JWT (SimpleJWT)** or opaque tokens for API; rotate refresh tokens; add device-bound metadata.
 
-    - **Rate limits**: DRF throttling or `django-ratelimit`. Distinguish user vs IP vs key-level.
+  - **Rate limits**: DRF throttling or `django-ratelimit`. Distinguish user vs IP vs key-level.
 
 - Return **problem details** (`application/problem+json`) for errors; include stable error codes.
 
@@ -81,24 +81,23 @@
 - Start with a **custom User model** from day 0. Normalize emails; enforce uniqueness case-insensitively at DB.
 - Use `permissions` at object and domain level; avoid ad-hoc “if staff” checks. For complex policies use a small **policy module** (ABAC style).
 - For multi-tenant apps:
-    - Decide **isolation model**: schema-per-tenant (`django-tenants`) vs **row-level** (tenant FK + `TenantMiddleware` + scoped managers).
+  - Decide **isolation model**: schema-per-tenant (`django-tenants`) vs **row-level** (tenant FK + `TenantMiddleware` + scoped managers).
 
-    - Namespacing for cache keys per tenant; separate S3 buckets/prefixes for media if needed.
+  - Namespacing for cache keys per tenant; separate S3 buckets/prefixes for media if needed.
 
-    - Migration strategy per tenant; protect cross-tenant data spills with DB constraints and tests.
-
+  - Migration strategy per tenant; protect cross-tenant data spills with DB constraints and tests.
 
 ## 8) Async, tasks & scheduling
 
 - Run Django under **ASGI**; prefer **Uvicorn** (or Daphne for Channels).
 - For background work: **Celery** + Redis/RabbitMQ. Best practices:
-    - Tasks are **idempotent**, small, and retriable; use exponential backoff; set hard/soft time limits.
+  - Tasks are **idempotent**, small, and retriable; use exponential backoff; set hard/soft time limits.
 
-    - Pass **ids, not blobs**. Fetch inside the task.
+  - Pass **ids, not blobs**. Fetch inside the task.
 
-    - Use a **unique task key** to avoid duplicates in hot paths.
+  - Use a **unique task key** to avoid duplicates in hot paths.
 
-    - Structured logging for tasks; export metrics (success/fail/latency).
+  - Structured logging for tasks; export metrics (success/fail/latency).
 
 - Real-time/websockets: **Django Channels** or an external pub/sub (e.g., NATS) with server-sent events.
 
@@ -145,11 +144,11 @@
 
 - Use **pytest** + `pytest-django`, **factory_boy**, **faker**, **pytest-xdist** (parallel), **pytest-cov**.
 - Pyramid of tests:
-    - Unit (fast, isolated), service-layer tests,
+  - Unit (fast, isolated), service-layer tests,
 
-    - API tests (contract + auth + pagination),
+  - API tests (contract + auth + pagination),
 
-    - A small set of end-to-end smoke tests.
+  - A small set of end-to-end smoke tests.
 
 - Add **query count** assertions for hot endpoints.
 - Seed data via factories, not fixtures. Make tests hermetic (ephemeral DB via `tmp_postgres` or Docker).
@@ -173,7 +172,7 @@
 ## 17) Docs & governance
 
 - Keep a living **README** + **/docs** with:
-    - Architecture diagram, data model, API schema link, runbook (alerts → actions), release checklist, ADRs (Architecture Decision Records).
+  - Architecture diagram, data model, API schema link, runbook (alerts → actions), release checklist, ADRs (Architecture Decision Records).
 
 - Track **operational budgets** (SLOs, error budgets) and a quarterly **tech debt** cleanup list.
 
@@ -181,7 +180,6 @@
 
 - `USE_TZ=True`, store UTC in DB; convert at edges. Never store local time.
 - Use `Decimal` for money; centralize currency formatting and rounding. Store amounts + currency, not strings.
-
 
 ## 19) Data privacy & governance
 

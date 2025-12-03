@@ -4,7 +4,7 @@ As a Solutions Architect, use this checklist to ensure the PRD and related docum
 ## Decisions
 - [ ] /docs/adrs/README.md — ADR index
 - [ ] /docs/adrs/ADR-<3_digits_numbers>-<decision>.md — first real decision
-    - e.g., ADR-001-platform.md, ADR-002-storage.md
+  - e.g., ADR-001-platform.md, ADR-002-storage.md
 
 Use `.x100/doc-templates/ADR.md` as a template.
 
@@ -25,5 +25,3 @@ Use `.x100/doc-templates/ADR.md` as a template.
 ## Ops
 - [ ] /docs/ops/observability.md — logging, metrics, tracing, dashboards, alerts
 - [ ] /docs/ops/deployment.md — CI/CD, environments, rollback, feature flags
-
-

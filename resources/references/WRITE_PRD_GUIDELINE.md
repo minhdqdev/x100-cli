@@ -17,4 +17,3 @@ SRE/DevOps (R/C): deployment topology, IaC refs, SLOs, runbooks, incident/rollba
 QA (R/C): acceptance criteria linkage, test strategy.
 
 Finance/Owner (C): budget, unit economics.
-

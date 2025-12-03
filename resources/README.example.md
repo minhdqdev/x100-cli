@@ -37,23 +37,18 @@
 
 DESCRIPTION
 
-
 ## ⚡️ Get started 
-
 
 ## 👥 Maintainers
 - OWNER ([@OWNER](https://github.com/OWNER))
-
 
 ## 🤝 Contributing
 
 Read more in the [Contributing Guide](./.github/CONTRIBUTING.md).
 
-
 ## 💬 Support
 
 For support, please open a [GitHub issue](https://github.com/OWNER/REPO/issues/new). We welcome bug reports, feature requests, and questions about using the template.
-
 
 ## 📄 License
 

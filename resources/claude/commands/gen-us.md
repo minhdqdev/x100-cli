@@ -7,4 +7,3 @@ description: Generate user stories from product backlog
 - Read `.x100/references/TECHNICAL_GUIDELINES.md` for technical guidelines.
 - From epics defined in `docs/PRODUCT_BACKLOG.md`, write user stories and save them to `docs/user-stories/US-<ID>.md`
 - Use `.x100/doc-templates/USER_STORY.md` as template for each user story.
-

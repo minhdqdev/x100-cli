@@ -4,7 +4,7 @@
 - **Date:** YYYY-MM-DD
 - **Owners:** <name(s)>
 - **Reviewers/Approvers:** <name(s)>
-- **Related:** PRD §__, Epic/Issue #__, RFC #__
+- **Related:** PRD §..., Epic/Issue #..., RFC #...
 
 ## 1) Decision (one sentence)
 <What are we doing and at what boundary?>
@@ -16,7 +16,7 @@
 - Assumptions:
 
 ## 3) Decision drivers (rank or bullets)
-- <e.g., p95 latency ≤ __ms>
+- <e.g., p95 latency ≤ ...ms>
 - <e.g., minimize vendor lock-in>
 - <e.g., simple rollback>
 
@@ -48,13 +48,13 @@
 - **Neutral/Unknowns:** <what we’ll learn>
 
 ## 7) NFR & compliance impact
-- Performance: target p95 __ms, throughput __/s
-- Availability: __% (SLO), RTO __, RPO __
+- Performance: target p95 ...ms, throughput .../s
+- Availability: ...% (SLO), RTO ..., RPO ...
 - Security/Privacy: authZ model, data classes touched (PII?); mitigations
 - Reliability/Resilience: retries, timeouts, idempotency, fallbacks
 - Maintainability/Operability: ownership, blast radius
-- Cost/FinOps: est. $__/month or $__/tx; ceiling __
-- Compliance: GDPR | VN PDPD | PCI DSS | HIPAA | other: __
+- Cost/FinOps: est. $.../month or $.../tx; ceiling ...
+- Compliance: GDPR | VN PDPD | PCI DSS | HIPAA | other: ...
 
 ## 8) Rollout & ops plan
 - Migration/Backfill steps:

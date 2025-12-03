@@ -14,8 +14,13 @@
     "MD024": {
       "siblings_only": true
     },
+    "MD030": false,
+    "MD031": false,
     "MD032": false,
     "MD033": false,
+    "MD034": false,
+    "MD036": false,
+    "MD040": false,
     "MD041": false,
     "MD045": false,
     "MD047": false,
@@ -25,7 +30,8 @@
     "MD050": {
       "style": "asterisk"
     },
-    "MD059": false
+    "MD059": false,
+    "MD060": false
   },
   "ignores": [
     ".genreleases/"

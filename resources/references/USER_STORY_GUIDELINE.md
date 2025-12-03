@@ -49,7 +49,7 @@ No jargon, no passive voice. If a stakeholder can’t read it, you’re writing 
 
 ---
 
-### Example (compact)
+## Example (compact)
 
 **Title:** Save dashboard filters
 **Story:** As a power user, I want my dashboard filters to persist across sessions so that I don’t reconfigure them every time.

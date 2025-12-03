@@ -215,6 +215,10 @@ build_variant() {
       mkdir -p "$base_dir/.bob/commands"
       generate_commands bob md "\$ARGUMENTS" "$base_dir/.bob/commands" "$script" ;;
   esac
+  
+  # Copy AGENTS.md to project root (universal for all agents)
+  [[ -f templates/AGENTS.md ]] && cp templates/AGENTS.md "$base_dir/AGENTS.md"
+  
   ( cd "$base_dir" && zip -r "../x100-template-${agent}-${script}-${NEW_VERSION}.zip" . )
   echo "Created $GENRELEASES_DIR/x100-template-${agent}-${script}-${NEW_VERSION}.zip"
 }

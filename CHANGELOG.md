@@ -7,6 +7,28 @@ All notable changes to the Specify CLI and templates are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **AI Steering Files**: New steering system that provides AI assistants with persistent project knowledge
+  - Foundation files: `product.md`, `tech.md`, `structure.md` (always included)
+  - Strategy files with conditional inclusion based on file patterns:
+    - `api-standards.md` - REST conventions, error handling, authentication
+    - `testing-standards.md` - Test patterns, coverage requirements, best practices
+    - `code-conventions.md` - Naming conventions, function design, documentation
+    - `security-policies.md` - Authentication, encryption, input validation
+    - `deployment-workflow.md` - Environment setup, deployment strategies, rollback
+  - Steering files are located in `.x100/steering/` directory
+  - Inspired by [Kiro's steering feature](https://kiro.dev/docs/steering/)
+  - Eliminates need to repeatedly explain project conventions to AI assistants
+  - Comprehensive README with usage examples and best practices
+- **AGENTS.md Template**: Added `AGENTS.md` file that's automatically created during `x100 init`
+  - Provides AI agents with project-specific guidance and workflows
+  - References steering files for persistent knowledge
+  - Includes workflow automation commands and best practices
+  - Compatible with the [AGENTS.md standard](https://agents.md/)
+
 ## [0.0.22] - 2025-11-07
 
 - Support for VS Code/Copilot agents, and moving away from prompts to proper agents with hand-offs.

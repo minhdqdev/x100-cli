@@ -54,11 +54,13 @@ This automatically:
 ## Examples
 
 ### New Feature
+
 ```bash
 /workflow US-005-payment-integration
 ```
 
 ### Bug Fix
+
 ```bash
 /code "Fix authentication timeout bug"
 /test
@@ -66,6 +68,7 @@ This automatically:
 ```
 
 ### Quick Review
+
 ```bash
 /review
 /test
@@ -147,6 +150,7 @@ This automatically:
 ```
 
 Then in Claude Code:
+
 ```
 /workflow your-first-user-story.md
 ```

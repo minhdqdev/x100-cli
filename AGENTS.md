@@ -1,10 +1,10 @@
 # AGENTS.md
 
-## About Spec Kit and Specify
+## About Spec Kit and x100 CLI
 
 **GitHub Spec Kit** is a comprehensive toolkit for implementing Spec-Driven Development (SDD) - a methodology that emphasizes creating clear specifications before implementation. The toolkit includes templates, scripts, and workflows that guide development teams through a structured approach to building software.
 
-**Specify CLI** is the command-line interface that bootstraps projects with the Spec Kit framework. It sets up the necessary directory structures, templates, and AI agent integrations to support the Spec-Driven Development workflow.
+**x100 CLI** is the command-line interface that bootstraps projects with the Spec Kit framework. It sets up the necessary directory structures, templates, and AI agent integrations to support the Spec-Driven Development workflow.
 
 The toolkit supports multiple AI coding assistants, allowing teams to use their preferred tools while maintaining consistent project structure and development practices.
 
@@ -12,15 +12,15 @@ The toolkit supports multiple AI coding assistants, allowing teams to use their 
 
 ## General practices
 
-- Any changes to `__init__.py` for the Specify CLI require a version rev in `pyproject.toml` and addition of entries to `CHANGELOG.md`.
+- Any changes to `__init__.py` for the x100 CLI require a version rev in `pyproject.toml` and addition of entries to `CHANGELOG.md`.
 
 ## Adding New Agent Support
 
-This section explains how to add support for new AI agents/assistants to the Specify CLI. Use this guide as a reference when integrating new AI tools into the Spec-Driven Development workflow.
+This section explains how to add support for new AI agents/assistants to the x100 CLI. Use this guide as a reference when integrating new AI tools into the Spec-Driven Development workflow.
 
 ### Overview
 
-Specify supports multiple AI agents by generating agent-specific command files and directory structures when initializing projects. Each agent has its own conventions for:
+x100 supports multiple AI agents by generating agent-specific command files and directory structures when initializing projects. Each agent has its own conventions for:
 
 - **Command file formats** (Markdown, TOML, etc.)
 - **Directory structures** (`.claude/commands/`, `.windsurf/workflows/`, etc.)
