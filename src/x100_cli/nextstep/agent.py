@@ -29,6 +29,8 @@ class NextStepAgent:
         git_analysis: GitAnalysis,
         test_analysis: TestAnalysis,
         project_status: Optional[ProjectStatus] = None,
+        story_statuses: Optional[list] = None,
+        doc_status: Optional[any] = None,
     ) -> Recommendations:
         """Analyze project data and generate recommendations."""
         
@@ -51,6 +53,8 @@ class NextStepAgent:
         gaps = self._find_gaps(
             code_analysis,
             test_analysis,
+            story_statuses,
+            doc_status,
         )
         
         # Generate next steps
@@ -222,6 +226,8 @@ class NextStepAgent:
         self,
         code_analysis: CodeAnalysis,
         test_analysis: TestAnalysis,
+        story_statuses: Optional[list] = None,
+        doc_status: Optional[any] = None,
     ) -> list[Gap]:
         """Find gaps and inconsistencies."""
         gaps = []
@@ -256,6 +262,52 @@ class NextStepAgent:
                 description=f"{len(old_todos)} TODO markers older than 30 days",
                 severity="medium",
             ))
+        
+        # User story gaps
+        if story_statuses:
+            # Stories marked done but no implementation
+            done_no_impl = [s for s in story_statuses if s.status == 'done' and not s.has_implementation]
+            if done_no_impl:
+                for story in done_no_impl[:3]:  # Top 3
+                    gaps.append(Gap(
+                        category="Story-Code Mismatch",
+                        description=f"{story.id}: Marked done but no implementation reference",
+                        severity="high",
+                        file=story.file_path,
+                    ))
+            
+            # Stories without tests
+            no_tests = [s for s in story_statuses if not s.has_tests and s.status != 'todo']
+            if len(no_tests) > 0:
+                gaps.append(Gap(
+                    category="Story Quality",
+                    description=f"{len(no_tests)} stories without test references",
+                    severity="medium",
+                ))
+        
+        # Documentation gaps
+        if doc_status:
+            missing_docs = []
+            if not doc_status.has_readme:
+                missing_docs.append("README.md")
+            if not doc_status.has_license:
+                missing_docs.append("LICENSE")
+            if not doc_status.has_changelog:
+                missing_docs.append("CHANGELOG.md")
+            
+            if missing_docs:
+                gaps.append(Gap(
+                    category="Documentation",
+                    description=f"Missing: {', '.join(missing_docs)}",
+                    severity="medium",
+                ))
+            
+            if doc_status.outdated_docs:
+                gaps.append(Gap(
+                    category="Documentation",
+                    description=f"{len(doc_status.outdated_docs)} docs with TODO/TBD markers",
+                    severity="low",
+                ))
         
         return gaps
     

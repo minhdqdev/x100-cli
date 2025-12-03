@@ -1744,6 +1744,58 @@ def initialize_project(ctx: typer.Context):
     raise typer.Exit(ctx.invoke(init))
 
 
+@app.command(name="nextstep-setup")
+def nextstep_setup(
+    ctx: typer.Context,
+    github_repo: str = typer.Option(
+        None,
+        "--github-repo",
+        help="GitHub repository (owner/repo)",
+        prompt="GitHub repository (owner/repo, or press Enter to skip)",
+    ),
+    coverage_threshold: int = typer.Option(
+        80,
+        "--coverage-threshold",
+        help="Target test coverage percentage",
+        prompt="Target test coverage (%)",
+    ),
+):
+    """
+    Configure nextstep settings.
+    
+    Creates a configuration file at .x100/nextstep.json with your preferences.
+    """
+    from .nextstep.config import NextStepConfig, AnalysisConfig, GitHubConfig, save_config
+    
+    show_banner()
+    
+    console.print("[cyan]Setting up nextstep configuration...[/cyan]\n")
+    
+    # Create configuration
+    config = NextStepConfig()
+    config.analysis.coverage_threshold = coverage_threshold
+    
+    if github_repo and github_repo.strip():
+        config.github.enabled = True
+        config.github.repo = github_repo.strip()
+        console.print(f"[green]✓[/green] GitHub integration enabled for {github_repo}")
+    else:
+        console.print("[yellow]○[/yellow] GitHub integration disabled (can enable later)")
+    
+    # Save configuration
+    config_path = Path.cwd() / ".x100" / "nextstep.json"
+    save_config(config, config_path)
+    
+    console.print(f"\n[green]✓ Configuration saved to:[/green] {config_path}")
+    console.print("\n[dim]You can now run 'x100 nextstep' to analyze your project.[/dim]")
+    
+    # Show configuration
+    console.print("\n[cyan]Configuration:[/cyan]")
+    console.print(f"  • Coverage threshold: {config.analysis.coverage_threshold}%")
+    console.print(f"  • GitHub repo: {config.github.repo or 'Not configured'}")
+    console.print(f"  • GitHub enabled: {config.github.enabled}")
+
+
 @app.command()
 def nextstep(
     ctx: typer.Context,
@@ -1759,6 +1811,18 @@ def nextstep(
         "-f",
         help="Output format: rich, json, markdown",
     ),
+    save: bool = typer.Option(
+        False,
+        "--save",
+        "-s",
+        help="Save report to file",
+    ),
+    output: str = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Output file path (default: nextstep_report_TIMESTAMP.ext)",
+    ),
     github_token: str = typer.Option(
         None,
         "--github-token",
@@ -1768,6 +1832,12 @@ def nextstep(
         None,
         "--github-repo",
         help="GitHub repository (owner/repo)",
+    ),
+    config_file: str = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Configuration file path (default: .x100/nextstep.json)",
     ),
 ):
     """
@@ -1792,8 +1862,19 @@ def nextstep(
         NextStepAgent,
     )
     from .nextstep.integrations import GitHubIntegration
+    from .nextstep.config import load_config
+    from .nextstep.formatters import MarkdownFormatter, JSONFormatter, save_report
     
     show_banner()
+    
+    # Load configuration
+    config_path = Path(config_file) if config_file else None
+    config = load_config(config_path)
+    
+    # Override config with command-line options
+    if github_repo:
+        config.github.enabled = True
+        config.github.repo = github_repo
     
     project_path = Path.cwd()
     
@@ -1822,19 +1903,33 @@ def nextstep(
         test_analysis = test_analyzer.analyze()
         progress.remove_task(task)
         
+        # 3a. Story analysis
+        task = progress.add_task("📖 Analyzing user stories...", total=None)
+        from .nextstep.analyzers.stories import StoryAnalyzer
+        story_analyzer = StoryAnalyzer(project_path)
+        story_statuses = story_analyzer.analyze()
+        progress.remove_task(task)
+        
+        # 3b. Documentation analysis
+        task = progress.add_task("📚 Analyzing documentation...", total=None)
+        from .nextstep.analyzers.docs import DocsAnalyzer
+        docs_analyzer = DocsAnalyzer(project_path)
+        doc_status = docs_analyzer.analyze()
+        progress.remove_task(task)
+        
         # 4. GitHub integration (optional)
         project_status = None
-        if github_repo:
+        if config.github.enabled and config.github.repo:
             task = progress.add_task("📋 Fetching GitHub status...", total=None)
-            token = github_token or os.getenv("GITHUB_TOKEN")
+            token = github_token or os.getenv(config.github.token_env)
             if token:
                 try:
-                    github_integration = GitHubIntegration(token, github_repo)
+                    github_integration = GitHubIntegration(token, config.github.repo)
                     project_status = github_integration.get_project_status()
                 except Exception as e:
                     console.print(f"[yellow]Warning: GitHub integration failed: {e}[/yellow]")
             else:
-                console.print("[yellow]Warning: GitHub token not provided[/yellow]")
+                console.print(f"[yellow]Warning: GitHub token not found (set {config.github.token_env})[/yellow]")
             progress.remove_task(task)
         
         # 5. AI analysis
@@ -1845,55 +1940,56 @@ def nextstep(
             git_analysis,
             test_analysis,
             project_status,
+            story_statuses,
+            doc_status,
         )
         progress.remove_task(task)
     
     console.print()
     
     # Display results based on format
+    report_content = None
+    
     if format == "json":
-        import json
-        output = {
-            "health_score": recommendations.health_score.overall,
-            "health_summary": recommendations.health_score.summary,
-            "blockers": [
-                {
-                    "title": b.title,
-                    "impact": b.impact,
-                    "source": b.source,
-                }
-                for b in recommendations.blockers
-            ],
-            "gaps": [
-                {
-                    "category": g.category,
-                    "description": g.description,
-                    "severity": g.severity,
-                }
-                for g in recommendations.gaps
-            ],
-            "next_steps": [
-                {
-                    "priority": s.priority,
-                    "action": s.action,
-                    "rationale": s.rationale,
-                    "impact": s.impact,
-                    "effort": s.effort,
-                }
-                for s in recommendations.next_steps
-            ],
-        }
-        console.print_json(data=output)
-    else:
-        # Rich console output
+        formatter = JSONFormatter()
+        report_content = formatter.format(
+            recommendations,
+            code_analysis,
+            git_analysis,
+            test_analysis,
+            verbose,
+        )
+        if not save:
+            console.print_json(data=report_content)
+    
+    elif format == "markdown":
+        formatter = MarkdownFormatter()
+        report_content = formatter.format(
+            recommendations,
+            code_analysis,
+            git_analysis,
+            test_analysis,
+            verbose,
+        )
+        if not save:
+            from rich.markdown import Markdown
+            console.print(Markdown(report_content))
+    
+    else:  # rich
         _display_nextstep_report(
             recommendations,
             code_analysis,
             git_analysis,
             test_analysis,
             verbose,
-            github_repo,
+            github_repo or (config.github.repo if config.github.enabled else None),
         )
+    
+    # Save report if requested
+    if save:
+        output_path = Path(output) if output else None
+        saved_path = save_report(report_content or "", format, output_path)
+        console.print(f"\n[green]✓ Report saved to:[/green] {saved_path}")
 
 
 def _display_nextstep_report(

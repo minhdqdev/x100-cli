@@ -1,0 +1,22 @@
+{
+  "default_ai_agent": "claude",
+  "analysis": {
+    "coverage_threshold": 80,
+    "stale_issue_days": 30,
+    "stale_pr_days": 7,
+    "old_todo_days": 30,
+    "max_fixme_count": 10
+  },
+  "github": {
+    "enabled": true,
+    "token_env": "GITHUB_TOKEN",
+    "repo": "80",
+    "project_number": null
+  },
+  "health_weights": {
+    "velocity": 0.2,
+    "quality": 0.3,
+    "blockers": 0.3,
+    "activity": 0.2
+  }
+}

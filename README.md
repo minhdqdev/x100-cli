@@ -232,17 +232,26 @@ The `AGENTS.md` file is recognized by many AI coding assistants and complements 
 Use `x100 nextstep` to get AI-powered project analysis and recommendations:
 
 ```bash
+# First time setup (optional)
+x100 nextstep-setup
+
 # Basic analysis
 x100 nextstep
 
 # Detailed analysis with statistics
 x100 nextstep --verbose
 
+# Save report as Markdown
+x100 nextstep --format markdown --save
+
 # JSON output for automation
-x100 nextstep --format json
+x100 nextstep --format json --verbose --save --output report.json
 
 # With GitHub integration
 x100 nextstep --github-repo owner/repo --github-token $GITHUB_TOKEN
+
+# Use configuration file
+x100 nextstep --config .x100/nextstep.json
 ```
 
 **The command analyzes:**

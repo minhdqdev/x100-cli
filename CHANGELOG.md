@@ -11,16 +11,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`x100 nextstep` Command**: AI-powered project analysis and recommendations (MVP)
+- **`x100 nextstep` Command**: AI-powered project analysis and recommendations
   - Analyzes codebase health (file count, TODOs, FIXMEs)
   - Analyzes git activity and velocity
   - Analyzes test coverage
   - Calculates project health score (0-100)
   - Identifies blockers and gaps
   - Generates prioritized next step recommendations
-  - Multiple output formats: rich console, JSON
+  - Multiple output formats: rich console, JSON, Markdown
+  - Report saving (--save option)
+  - Configuration system (.x100/nextstep.json)
   - Optional GitHub integration (requires `--github-repo` and token)
   - Verbose mode for detailed statistics
+- **`x100 nextstep-setup` Command**: Interactive configuration wizard
+  - Sets up GitHub integration
+  - Configures coverage thresholds
+  - Creates .x100/nextstep.json configuration file
+- **Enhanced Analysis (Phase 3)**:
+  - User story tracking and implementation status
+  - Documentation coverage analysis
+  - Story-code mismatch detection
+  - Missing documentation identification
+  - Comprehensive gap analysis
 - **AI Steering Files**: New steering system that provides AI assistants with persistent project knowledge
   - Foundation files: `product.md`, `tech.md`, `structure.md` (always included)
   - Strategy files with conditional inclusion based on file patterns:
