@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2024-12-04
+
+### Fixed
+
+- **User Story Status Detection**: Fixed incorrect "done" status detection
+  - Previously: Stories marked as "done" if the word "implemented" appeared anywhere (even in unchecked checkboxes)
+  - Now: Properly checks acceptance criteria checkbox states `[x]` vs `[ ]`
+  - Status logic: All checkboxes checked = done, some checked = in-progress, none checked = todo
+  - Prevents false positives where stories with `- [ ] Code implemented` were incorrectly marked as done
+  - More accurate project health reporting
+
+### Added
+
+- **Default AI Agent Persistence**: `x100 init` now saves the selected AI agent to `.x100/config.json`
+  - Default agent is persisted during project initialization
+  - Configuration file stores the chosen agent for future reference
+- **`x100 agent switch-default` Command**: New command to change the default AI agent
+  - Interactive selection of new default agent using arrow keys
+  - Shows current default agent before switching
+  - Updates `.x100/config.json` with new selection
+  - Provides feedback on agent folder location
+- **`x100 nextstep` uses default agent**: The nextstep command now uses the project's default agent
+  - Reads from `.x100/config.json` instead of hardcoded "claude"
+  - Displays which agent is performing the analysis
+  - Falls back to "claude" if no default agent is configured
+  - **NEW**: Actually invokes the AI CLI (Claude, Copilot, Gemini) for analysis
+  - Copilot command: `copilot -p "<prompt>" --allow-all-tools`
+  - Claude command: `claude chat -m "<prompt>"`
+  - Gemini command: `gemini chat "<prompt>"`
+  - `--use-ai/--no-ai` flag to enable/disable AI CLI usage (default: enabled)
+  - `--show-ai-insights` flag to display raw AI analysis output
+  - Falls back to rule-based analysis if AI CLI is not available
+  - AI performs comprehensive analysis: reads files, runs git commands, analyzes code structure
+
 ### Added
 
 - **`x100 nextstep` Command**: AI-powered project analysis and recommendations

@@ -15,13 +15,17 @@ from .models import (
     Gap,
     NextStep,
 )
+from .ai_client import get_ai_client, build_analysis_prompt
 
 
 class NextStepAgent:
     """AI agent for analyzing project and generating recommendations."""
     
-    def __init__(self):
-        pass
+    def __init__(self, agent_name: str = "claude", use_ai: bool = True):
+        self.agent_name = agent_name
+        self.use_ai = use_ai
+        self.ai_client = get_ai_client(agent_name) if use_ai else None
+        self.ai_response = None  # Store AI response for debugging
     
     def analyze_and_recommend(
         self,
@@ -34,14 +38,32 @@ class NextStepAgent:
     ) -> Recommendations:
         """Analyze project data and generate recommendations."""
         
-        # Calculate health score
+        # Try to get AI insights if enabled
+        if self.use_ai and self.ai_client:
+            try:
+                prompt = build_analysis_prompt(
+                    code_analysis,
+                    git_analysis,
+                    test_analysis,
+                    project_status,
+                    story_statuses,
+                    doc_status,
+                )
+                self.ai_response = self.ai_client.analyze(prompt)
+                # AI response is stored but we still use rule-based for structured output
+                # In future, we could parse AI response for better recommendations
+            except Exception as e:
+                # If AI fails, fall back to rule-based analysis
+                self.ai_response = f"AI analysis failed: {str(e)}"
+        
+        # Calculate health score (rule-based)
         health_score = self._calculate_health_score(
             code_analysis,
             git_analysis,
             test_analysis,
         )
         
-        # Identify blockers
+        # Identify blockers (rule-based)
         blockers = self._identify_blockers(
             code_analysis,
             git_analysis,
@@ -49,7 +71,7 @@ class NextStepAgent:
             project_status,
         )
         
-        # Find gaps
+        # Find gaps (rule-based)
         gaps = self._find_gaps(
             code_analysis,
             test_analysis,
@@ -57,7 +79,7 @@ class NextStepAgent:
             doc_status,
         )
         
-        # Generate next steps
+        # Generate next steps (rule-based, could be enhanced with AI insights)
         next_steps = self._generate_next_steps(
             code_analysis,
             git_analysis,

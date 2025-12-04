@@ -60,15 +60,26 @@ def load_config(config_path: Optional[Path] = None) -> NextStepConfig:
     if config_path is None:
         config_path = Path.cwd() / ".x100" / "nextstep.json"
     
+    # Try to read default agent from main config
+    default_agent = "claude"
+    main_config_path = Path.cwd() / ".x100" / "config.json"
+    if main_config_path.exists():
+        try:
+            import json
+            main_config = json.loads(main_config_path.read_text(encoding="utf-8"))
+            default_agent = main_config.get("default_agent", "claude")
+        except Exception:
+            pass
+    
     if not config_path.exists():
-        return NextStepConfig()
+        return NextStepConfig(default_ai_agent=default_agent)
     
     try:
         with open(config_path, 'r') as f:
             data = json.load(f)
         
         config = NextStepConfig(
-            default_ai_agent=data.get("default_ai_agent", "claude"),
+            default_ai_agent=data.get("default_ai_agent", default_agent),
         )
         
         if "analysis" in data:

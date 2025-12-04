@@ -33,6 +33,17 @@ def load_config() -> None:
 X100_CONFIG = load_config()
 
 
+def save_config(config: dict, config_path: Path = None) -> None:
+    """Save configuration to .x100/config.json."""
+    if config_path is None:
+        config_path = X100_CONFIG_PATH
+    
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(
+        json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+
+
 @dataclass(frozen=True)
 class ToolPaths:
     """Locations the CLI depends on."""

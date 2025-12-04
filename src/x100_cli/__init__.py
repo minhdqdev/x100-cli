@@ -54,6 +54,7 @@ from .core import (
     X100_CONFIG_PATH,
     X100_CONFIG,
     AGENT_CONFIG,
+    save_config,
 )
 
 
@@ -951,30 +952,80 @@ def list_registered_agents():
     console.print(table)
 
 
+def switch_default_agent():
+    """Switch the default AI agent for the current x100 project."""
+    if not X100_CONFIG_PATH.exists():
+        console.print(
+            "[red]Error:[/red] Not in an x100 project directory. Run this command from a project initialized with 'x100 init'."
+        )
+        raise typer.Exit(1)
+    
+    # Load current config
+    config = {}
+    try:
+        config = json.loads(X100_CONFIG_PATH.read_text(encoding="utf-8"))
+    except Exception as e:
+        console.print(f"[red]Error reading config:[/red] {e}")
+        raise typer.Exit(1)
+    
+    current_agent = config.get("default_agent", "unknown")
+    
+    console.print(f"\n[cyan]Current default agent:[/cyan] {current_agent}")
+    console.print()
+    
+    # Show available agents and let user select
+    ai_choices = {key: cfg["name"] for key, cfg in AGENT_CONFIG.items()}
+    
+    selected_ai = select_with_arrows(
+        ai_choices, 
+        "Choose new default AI assistant:", 
+        current_agent if current_agent in ai_choices else "copilot"
+    )
+    
+    if selected_ai == current_agent:
+        console.print(f"\n[yellow]Default agent unchanged:[/yellow] {current_agent}")
+        return
+    
+    # Update config
+    config["default_agent"] = selected_ai
+    save_config(config, X100_CONFIG_PATH)
+    
+    console.print(f"\n[green]✓[/green] Default agent changed from [cyan]{current_agent}[/cyan] to [cyan]{selected_ai}[/cyan]")
+    
+    agent_config = AGENT_CONFIG.get(selected_ai)
+    if agent_config:
+        agent_folder = agent_config["folder"]
+        console.print(f"\n[dim]Agent files location:[/dim] [cyan]{agent_folder}[/cyan]")
+        
+        project_root = X100_CONFIG_PATH.parent.parent
+        agent_path = project_root / agent_folder.strip("./")
+        
+        if not agent_path.exists():
+            console.print(
+                f"\n[yellow]Note:[/yellow] Agent folder does not exist yet. "
+                f"You may need to set up the agent configuration manually or re-initialize the project."
+            )
+
+
 @app.command()
 def agent(
-    subcommand: str = typer.Argument(None, help="Subcommand: list, enable, disable")
+    subcommand: str = typer.Argument(None, help="Subcommand: list, switch-default")
 ):
     """
     Manage AI agents for your x100 project.
 
     Subcommands:
-        list      List all available agents
-        enable    Enable a specific agent
-        disable   Disable a specific agent
+        list            List all available agents
+        switch-default  Change the default AI agent
     """
-    # from .commands.agents import manage_agents, list_available_agents, enable_agent, disable_agent
-
-    # paths = detect_tool_paths()
-
     if subcommand == "list":
         list_registered_agents()
-    # elif subcommand == "enable":
-    #     enable_agent(paths)
-    # elif subcommand == "disable":
-    #     disable_agent(paths)
-    # else:
-    #     manage_agents(paths)
+    elif subcommand == "switch-default":
+        switch_default_agent()
+    else:
+        console.print("[yellow]Unknown subcommand.[/yellow]")
+        console.print("Available subcommands: list, switch-default")
+        raise typer.Exit(1)
 
 
 def set_github_repo_url(url):
@@ -1315,6 +1366,18 @@ def init(
                     tracker.skip("git", "git not available")
             else:
                 tracker.skip("git", "--no-git flag")
+
+            # Save default AI agent to config
+            config_path = project_path / ".x100" / "config.json"
+            config = {}
+            if config_path.exists():
+                try:
+                    config = json.loads(config_path.read_text(encoding="utf-8"))
+                except Exception:
+                    pass
+            
+            config["default_agent"] = selected_ai
+            save_config(config, config_path)
 
             tracker.complete("final", "project ready")
         except Exception as e:
@@ -1839,6 +1902,16 @@ def nextstep(
         "-c",
         help="Configuration file path (default: .x100/nextstep.json)",
     ),
+    use_ai: bool = typer.Option(
+        True,
+        "--use-ai/--no-ai",
+        help="Use AI CLI for enhanced analysis (default: true)",
+    ),
+    show_ai_insights: bool = typer.Option(
+        False,
+        "--show-ai-insights",
+        help="Show raw AI analysis output",
+    ),
 ):
     """
     Analyze project health and suggest next steps.
@@ -1854,6 +1927,8 @@ def nextstep(
         x100 nextstep --verbose
         x100 nextstep --format json
         x100 nextstep --github-repo owner/repo --github-token $GITHUB_TOKEN
+        x100 nextstep --show-ai-insights  # Show AI's analysis
+        x100 nextstep --no-ai  # Use only rule-based analysis
     """
     from .nextstep import (
         CodeAnalyzer,
@@ -1867,9 +1942,23 @@ def nextstep(
     
     show_banner()
     
-    # Load configuration
+    # Load project default agent from main config
+    project_config_path = Path.cwd() / ".x100" / "config.json"
+    default_agent = "claude"  # fallback
+    if project_config_path.exists():
+        try:
+            project_config = json.loads(project_config_path.read_text(encoding="utf-8"))
+            default_agent = project_config.get("default_agent", "claude")
+        except Exception:
+            pass
+    
+    # Load nextstep configuration
     config_path = Path(config_file) if config_file else None
     config = load_config(config_path)
+    
+    # Use project's default agent if not explicitly set in nextstep config
+    if config.default_ai_agent == "claude":  # if still using hardcoded default
+        config.default_ai_agent = default_agent
     
     # Override config with command-line options
     if github_repo:
@@ -1933,8 +2022,9 @@ def nextstep(
             progress.remove_task(task)
         
         # 5. AI analysis
-        task = progress.add_task("🤖 Generating recommendations...", total=None)
-        agent = NextStepAgent()
+        task_label = "🤖 Generating recommendations..." if use_ai else "📊 Analyzing (rule-based)..."
+        task = progress.add_task(task_label, total=None)
+        agent = NextStepAgent(agent_name=config.default_ai_agent, use_ai=use_ai)
         recommendations = agent.analyze_and_recommend(
             code_analysis,
             git_analysis,
@@ -1983,6 +2073,8 @@ def nextstep(
             test_analysis,
             verbose,
             github_repo or (config.github.repo if config.github.enabled else None),
+            config.default_ai_agent,
+            agent.ai_response if show_ai_insights else None,
         )
     
     # Save report if requested
@@ -1999,9 +2091,27 @@ def _display_nextstep_report(
     test_analysis,
     verbose,
     github_repo=None,
+    agent_name=None,
+    ai_response=None,
 ):
     """Display formatted nextstep report."""
     from rich.text import Text
+    
+    # Show which agent is being used
+    if agent_name:
+        agent_display = AGENT_CONFIG.get(agent_name, {}).get("name", agent_name)
+        console.print(f"[dim]Analysis by:[/dim] [cyan]{agent_display}[/cyan]\n")
+    
+    # Show AI insights if available and requested
+    if ai_response:
+        from rich.markdown import Markdown
+        console.print()
+        console.print(Panel(
+            Markdown(ai_response) if not ai_response.startswith("Error:") else ai_response,
+            title="🤖 AI Insights",
+            border_style="cyan" if not ai_response.startswith("Error:") else "yellow",
+        ))
+        console.print()
     
     # Health Score
     health = recommendations.health_score

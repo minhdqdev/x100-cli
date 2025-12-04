@@ -303,6 +303,10 @@ x100 nextstep
 x100 nextstep --verbose
 x100 nextstep --github-repo owner/repo --github-token $GITHUB_TOKEN
 
+# Manage AI agents
+x100 agent list                    # List registered agents
+x100 agent switch-default          # Change default AI agent (interactive)
+
 # Check tool installation
 x100 check
 

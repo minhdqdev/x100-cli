@@ -90,21 +90,51 @@ class StoryAnalyzer:
         """Extract status from user story."""
         content_lower = content.lower()
         
-        # Look for status markers
-        if 'status: done' in content_lower or '✅' in content:
+        # Look for explicit status markers
+        if 'status: done' in content_lower or 'status: completed' in content_lower or '✅' in content:
             return 'done'
         elif 'status: in progress' in content_lower or 'status: in-progress' in content_lower:
             return 'in-progress'
         elif 'status: todo' in content_lower or 'status: not started' in content_lower:
             return 'todo'
         
-        # Try to infer from content
-        if 'implemented' in content_lower or 'completed' in content_lower:
+        # Check checkbox-based completion in acceptance criteria
+        ac_section = re.search(
+            r'#+\s*Acceptance Criteria.*?(?=\n#+|\Z)',
+            content,
+            re.IGNORECASE | re.DOTALL
+        )
+        
+        if ac_section:
+            section_text = ac_section.group(0)
+            # Count checked and unchecked checkboxes
+            checked = len(re.findall(r'- \[x\]', section_text, re.IGNORECASE))
+            unchecked = len(re.findall(r'- \[ \]', section_text))
+            total = checked + unchecked
+            
+            if total > 0:
+                completion_ratio = checked / total
+                if completion_ratio == 1.0:
+                    return 'done'
+                elif completion_ratio > 0.0:
+                    return 'in-progress'
+                else:
+                    return 'todo'
+        
+        # Fallback: infer from keywords (but avoid false positives from checkbox text)
+        # Only check in non-checkbox contexts
+        lines_without_checkboxes = [
+            line for line in content.split('\n')
+            if not re.match(r'^\s*[-*]\s+\[[ xX]\]', line)
+        ]
+        clean_content = '\n'.join(lines_without_checkboxes).lower()
+        
+        if 'implemented and deployed' in clean_content or 'implementation complete' in clean_content:
             return 'done'
-        elif 'working on' in content_lower or 'in progress' in content_lower:
+        elif 'working on' in clean_content or 'currently implementing' in clean_content:
             return 'in-progress'
         
-        return 'unknown'
+        return 'todo'  # Default to 'todo' rather than 'unknown'
     
     def _count_acceptance_criteria(self, content: str) -> int:
         """Count acceptance criteria in story."""
@@ -166,20 +196,18 @@ class StoryAnalyzer:
         """Calculate completion percentage."""
         if status == 'done':
             return 100
+        elif status == 'todo':
+            return 0
         
         score = 0
         
-        # Status contributes 40%
+        # Status contributes 50%
         if status == 'in-progress':
-            score += 40
-        elif status == 'todo':
-            score += 0
-        else:  # unknown
-            score += 20
+            score += 50
         
-        # Implementation contributes 40%
+        # Implementation contributes 30%
         if has_impl:
-            score += 40
+            score += 30
         
         # Tests contribute 20%
         if has_tests:
