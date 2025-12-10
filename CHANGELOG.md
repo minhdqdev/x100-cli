@@ -9,6 +9,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2024-12-10
+
+### Added
+
+- **GitHub Issue Templates**: The `x100 init` command now automatically populates `.github/ISSUE_TEMPLATE/` with bug report and feature request templates
+  - Templates are copied from the package's bundled templates
+  - Includes `bug_report.md` and `feature_request.md` with comprehensive sections
+  - Step tracked in initialization progress: "Copy GitHub issue templates"
+  - Templates are included in package data for distribution
+
+### Changed
+
+- **Package Structure**: Moved `templates/` directory into `src/x100_cli/` for proper package inclusion
+- **Template Distribution**: Added `templates/**/*` and `templates/**/*.md` to package data in `pyproject.toml`
+
+## [0.1.1] - Previous
+
+### Added
+
+- **`x100 convert issue` Command**: AI-powered user story to GitHub issue conversion
+  - Automatically converts user story markdown files to GitHub issues
+  - Supports single file or batch directory processing
+  - Only processes files matching pattern: `US-[number]-[slug].md`
+  - Uses default AI agent (CLI-based) to extract structured data from markdown
+  - Creates issues via GitHub CLI (`gh`) with proper metadata
+  - Supports labels, assignees, milestones extracted by AI
+  - Automatically links issues to GitHub projects if configured
+  - Displays success/failure summary table
+  - Optionally deletes successfully converted files
+  - Supports multiple AI agents: claude, gemini, qwen, opencode, codex, auggie, codebuddy, amp, shai, q
+  - JSON schema contract for issue data structure
+  - Comprehensive error handling and reporting
+  - Documentation: `docs/CONVERT_ISSUE.md`
+  - Example user story: `examples/US-001-news-ingestion-pipeline.md`
+
+- **GitHub Project Integration**: New project management commands
+  - `x100 project set-url`: Configure GitHub project URL for issue linking
+  - `x100 project info`: View current project configuration
+  - Stores configuration in `.x100/config.json` with type, url, and id
+  - Automatic linking of issues to projects during conversion
+
+### Changed
+
+- **Core Module**: Added `load_config()` to public exports for use in convert module
+- **Documentation**: Extensive updates to README.md with convert command usage
+- **Architecture**: New `convert` submodule with modular design
+  - `schemas.py`: JSON schema and dataclass definitions
+  - `issue_converter.py`: Main conversion logic
+  - `github_issue_schema.json`: OpenAPI-compliant schema contract
+
 ## [0.1.1] - 2024-12-04
 
 ### Fixed

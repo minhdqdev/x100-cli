@@ -55,6 +55,7 @@ from .core import (
     X100_CONFIG,
     AGENT_CONFIG,
     save_config,
+    load_config,
 )
 
 
@@ -875,6 +876,53 @@ def download_and_extract_template(
     return project_path
 
 
+def copy_issue_templates(
+    project_path: Path, tracker: StepTracker | None = None
+) -> None:
+    """Copy GitHub issue templates from templates/ISSUE_TEMPLATE to .github/ISSUE_TEMPLATE."""
+    # Get the templates directory from the package
+    package_dir = Path(__file__).parent
+    templates_source = package_dir / "templates" / "ISSUE_TEMPLATE"
+    templates_dest = project_path / ".github" / "ISSUE_TEMPLATE"
+    
+    if not templates_source.exists():
+        if tracker:
+            tracker.skip("issue-templates", "source not found")
+        else:
+            console.print("[yellow]Warning: Issue template source not found[/yellow]")
+        return
+    
+    try:
+        if tracker:
+            tracker.start("issue-templates")
+        
+        # Create destination directory
+        templates_dest.mkdir(parents=True, exist_ok=True)
+        
+        # Copy all template files
+        copied = 0
+        for template_file in templates_source.glob("*.md"):
+            dest_file = templates_dest / template_file.name
+            shutil.copy2(template_file, dest_file)
+            copied += 1
+        
+        if tracker:
+            if copied > 0:
+                tracker.complete("issue-templates", f"{copied} template(s)")
+            else:
+                tracker.skip("issue-templates", "no templates found")
+        else:
+            if copied > 0:
+                console.print(
+                    f"[cyan]Copied {copied} issue template(s) to .github/ISSUE_TEMPLATE/[/cyan]"
+                )
+    except Exception as e:
+        if tracker:
+            tracker.error("issue-templates", str(e))
+        else:
+            console.print(f"[yellow]Warning: Could not copy issue templates: {e}[/yellow]")
+
+
 def ensure_executable_scripts(
     project_path: Path, tracker: StepTracker | None = None
 ) -> None:
@@ -917,7 +965,6 @@ def ensure_executable_scripts(
         detail = f"{updated} updated" + (
             f", {len(failures)} failed" if failures else ""
         )
-        tracker.add("chmod", "Set script permissions recursively")
         (tracker.error if failures else tracker.complete)("chmod", detail)
     else:
         if updated:
@@ -959,7 +1006,7 @@ def switch_default_agent():
             "[red]Error:[/red] Not in an x100 project directory. Run this command from a project initialized with 'x100 init'."
         )
         raise typer.Exit(1)
-    
+
     # Load current config
     config = {}
     try:
@@ -967,39 +1014,41 @@ def switch_default_agent():
     except Exception as e:
         console.print(f"[red]Error reading config:[/red] {e}")
         raise typer.Exit(1)
-    
+
     current_agent = config.get("default_agent", "unknown")
-    
+
     console.print(f"\n[cyan]Current default agent:[/cyan] {current_agent}")
     console.print()
-    
+
     # Show available agents and let user select
     ai_choices = {key: cfg["name"] for key, cfg in AGENT_CONFIG.items()}
-    
+
     selected_ai = select_with_arrows(
-        ai_choices, 
-        "Choose new default AI assistant:", 
-        current_agent if current_agent in ai_choices else "copilot"
+        ai_choices,
+        "Choose new default AI assistant:",
+        current_agent if current_agent in ai_choices else "copilot",
     )
-    
+
     if selected_ai == current_agent:
         console.print(f"\n[yellow]Default agent unchanged:[/yellow] {current_agent}")
         return
-    
+
     # Update config
     config["default_agent"] = selected_ai
     save_config(config, X100_CONFIG_PATH)
-    
-    console.print(f"\n[green]✓[/green] Default agent changed from [cyan]{current_agent}[/cyan] to [cyan]{selected_ai}[/cyan]")
-    
+
+    console.print(
+        f"\n[green]✓[/green] Default agent changed from [cyan]{current_agent}[/cyan] to [cyan]{selected_ai}[/cyan]"
+    )
+
     agent_config = AGENT_CONFIG.get(selected_ai)
     if agent_config:
         agent_folder = agent_config["folder"]
         console.print(f"\n[dim]Agent files location:[/dim] [cyan]{agent_folder}[/cyan]")
-        
+
         project_root = X100_CONFIG_PATH.parent.parent
         agent_path = project_root / agent_folder.strip("./")
-        
+
         if not agent_path.exists():
             console.print(
                 f"\n[yellow]Note:[/yellow] Agent folder does not exist yet. "
@@ -1318,6 +1367,7 @@ def init(
         ("extract", "Extract template"),
         ("zip-list", "Archive contents"),
         ("extracted-summary", "Extraction summary"),
+        ("issue-templates", "Copy GitHub issue templates"),
         ("chmod", "Ensure scripts executable"),
         ("cleanup", "Cleanup"),
         ("git", "Initialize git repository"),
@@ -1349,6 +1399,7 @@ def init(
                 github_token=github_token,
             )
 
+            copy_issue_templates(project_path, tracker=tracker)
             ensure_executable_scripts(project_path, tracker=tracker)
 
             if not no_git:
@@ -1375,7 +1426,7 @@ def init(
                     config = json.loads(config_path.read_text(encoding="utf-8"))
                 except Exception:
                     pass
-            
+
             config["default_agent"] = selected_ai
             save_config(config, config_path)
 
@@ -1717,6 +1768,121 @@ def update():
 
 
 @app.command()
+def convert(
+    ctx: typer.Context,
+    subcommand: str = typer.Argument(..., help="Conversion type: issue"),
+    path: str = typer.Argument(..., help="Path to user story file or directory"),
+    agent: str = typer.Option(
+        None,
+        "--agent",
+        "-a",
+        help="AI agent to use for conversion (default: project's default agent)",
+    ),
+):
+    """
+    Convert user stories to GitHub issues.
+
+    This command converts user story markdown files to GitHub issues using AI.
+    Only files matching the pattern US-[number]-[slug].md will be converted.
+
+    Examples:
+        x100 convert issue docs/user_stories/US-001-news-ingestion.md
+        x100 convert issue docs/user_stories
+        x100 convert issue docs/user_stories --agent claude
+    """
+    from .convert import IssueConverter
+
+    if subcommand != "issue":
+        console.print(
+            f"[red]Error:[/red] Unknown conversion type '{subcommand}'. Use 'issue'."
+        )
+        raise typer.Exit(1)
+
+    # Check if in x100 project
+    if not is_x100_project(Path.cwd()):
+        console.print(
+            "[red]Error:[/red] Not in an x100 project directory. "
+            "Run this command from a project initialized with 'x100 init'."
+        )
+        raise typer.Exit(1)
+
+    # Check if gh CLI is available
+    if not check_tool("gh"):
+        console.print(
+            "[red]Error:[/red] GitHub CLI (gh) is required but not found.\n"
+            "Install from: https://cli.github.com/"
+        )
+        raise typer.Exit(1)
+
+    # Load project config
+    config = load_config()
+    project_config = config.get("project", {})
+
+    # Check if it's a GitHub project
+    repo = None
+    project_id = None
+
+    if project_config.get("type") == "github_project":
+        project_url = project_config.get("url")
+        project_id = project_config.get("id")
+
+        if project_url:
+            # Extract repo from project URL (format: https://github.com/orgs/ORG/projects/NUM or https://github.com/users/USER/projects/NUM)
+            # For now, we'll need the repo to be configured separately or detected from git
+            pass
+
+    # Try to detect repo from git remote
+    try:
+        result = subprocess.run(
+            ["gh", "repo", "view", "--json", "nameWithOwner"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        repo_data = json.loads(result.stdout)
+        repo = repo_data.get("nameWithOwner")
+    except Exception:
+        console.print(
+            "[yellow]Warning:[/yellow] Could not detect GitHub repository from current directory.\n"
+            "Issues will be created in the current repository context."
+        )
+
+    # Validate path
+    target_path = Path(path).resolve()
+    if not target_path.exists():
+        console.print(f"[red]Error:[/red] Path not found: {path}")
+        raise typer.Exit(1)
+
+    # Create converter and run conversion
+    try:
+        converter = IssueConverter(agent_name=agent)
+
+        console.print(f"[cyan]Using AI agent:[/cyan] {converter.agent_config['name']}")
+        if repo:
+            console.print(f"[cyan]Target repository:[/cyan] {repo}")
+        if project_id:
+            console.print(f"[cyan]Linking to project:[/cyan] #{project_id}")
+        console.print()
+
+        results = converter.convert_and_create(
+            target_path, repo=repo, project_id=project_id
+        )
+
+        # Display results
+        IssueConverter.display_results(results)
+
+        # Prompt for cleanup
+        IssueConverter.prompt_cleanup(results)
+
+    except ValueError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+    except RuntimeError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
 def version():
     """Display version and system information."""
     import platform
@@ -1825,33 +1991,42 @@ def nextstep_setup(
 ):
     """
     Configure nextstep settings.
-    
+
     Creates a configuration file at .x100/nextstep.json with your preferences.
     """
-    from .nextstep.config import NextStepConfig, AnalysisConfig, GitHubConfig, save_config
-    
+    from .nextstep.config import (
+        NextStepConfig,
+        AnalysisConfig,
+        GitHubConfig,
+        save_config,
+    )
+
     show_banner()
-    
+
     console.print("[cyan]Setting up nextstep configuration...[/cyan]\n")
-    
+
     # Create configuration
     config = NextStepConfig()
     config.analysis.coverage_threshold = coverage_threshold
-    
+
     if github_repo and github_repo.strip():
         config.github.enabled = True
         config.github.repo = github_repo.strip()
         console.print(f"[green]✓[/green] GitHub integration enabled for {github_repo}")
     else:
-        console.print("[yellow]○[/yellow] GitHub integration disabled (can enable later)")
-    
+        console.print(
+            "[yellow]○[/yellow] GitHub integration disabled (can enable later)"
+        )
+
     # Save configuration
     config_path = Path.cwd() / ".x100" / "nextstep.json"
     save_config(config, config_path)
-    
+
     console.print(f"\n[green]✓ Configuration saved to:[/green] {config_path}")
-    console.print("\n[dim]You can now run 'x100 nextstep' to analyze your project.[/dim]")
-    
+    console.print(
+        "\n[dim]You can now run 'x100 nextstep' to analyze your project.[/dim]"
+    )
+
     # Show configuration
     console.print("\n[cyan]Configuration:[/cyan]")
     console.print(f"  • Coverage threshold: {config.analysis.coverage_threshold}%")
@@ -1915,13 +2090,13 @@ def nextstep(
 ):
     """
     Analyze project health and suggest next steps.
-    
+
     This command acts as an AI Project Manager/Tech Lead to:
     - Analyze codebase health and progress
     - Check git activity and velocity
     - Identify blockers, gaps, and risks
     - Recommend prioritized next steps
-    
+
     Examples:
         x100 nextstep
         x100 nextstep --verbose
@@ -1939,9 +2114,9 @@ def nextstep(
     from .nextstep.integrations import GitHubIntegration
     from .nextstep.config import load_config
     from .nextstep.formatters import MarkdownFormatter, JSONFormatter, save_report
-    
+
     show_banner()
-    
+
     # Load project default agent from main config
     project_config_path = Path.cwd() / ".x100" / "config.json"
     default_agent = "claude"  # fallback
@@ -1951,24 +2126,24 @@ def nextstep(
             default_agent = project_config.get("default_agent", "claude")
         except Exception:
             pass
-    
+
     # Load nextstep configuration
     config_path = Path(config_file) if config_file else None
     config = load_config(config_path)
-    
+
     # Use project's default agent if not explicitly set in nextstep config
     if config.default_ai_agent == "claude":  # if still using hardcoded default
         config.default_ai_agent = default_agent
-    
+
     # Override config with command-line options
     if github_repo:
         config.github.enabled = True
         config.github.repo = github_repo
-    
+
     project_path = Path.cwd()
-    
+
     console.print("[cyan]Analyzing project...[/cyan]\n")
-    
+
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
@@ -1979,33 +2154,35 @@ def nextstep(
         code_analyzer = CodeAnalyzer(project_path)
         code_analysis = code_analyzer.analyze()
         progress.remove_task(task)
-        
+
         # 2. Git analysis
         task = progress.add_task("📝 Analyzing git history...", total=None)
         git_analyzer = GitAnalyzer(project_path)
         git_analysis = git_analyzer.analyze()
         progress.remove_task(task)
-        
+
         # 3. Test analysis
         task = progress.add_task("🧪 Analyzing tests...", total=None)
         test_analyzer = TestAnalyzer(project_path)
         test_analysis = test_analyzer.analyze()
         progress.remove_task(task)
-        
+
         # 3a. Story analysis
         task = progress.add_task("📖 Analyzing user stories...", total=None)
         from .nextstep.analyzers.stories import StoryAnalyzer
+
         story_analyzer = StoryAnalyzer(project_path)
         story_statuses = story_analyzer.analyze()
         progress.remove_task(task)
-        
+
         # 3b. Documentation analysis
         task = progress.add_task("📚 Analyzing documentation...", total=None)
         from .nextstep.analyzers.docs import DocsAnalyzer
+
         docs_analyzer = DocsAnalyzer(project_path)
         doc_status = docs_analyzer.analyze()
         progress.remove_task(task)
-        
+
         # 4. GitHub integration (optional)
         project_status = None
         if config.github.enabled and config.github.repo:
@@ -2016,13 +2193,21 @@ def nextstep(
                     github_integration = GitHubIntegration(token, config.github.repo)
                     project_status = github_integration.get_project_status()
                 except Exception as e:
-                    console.print(f"[yellow]Warning: GitHub integration failed: {e}[/yellow]")
+                    console.print(
+                        f"[yellow]Warning: GitHub integration failed: {e}[/yellow]"
+                    )
             else:
-                console.print(f"[yellow]Warning: GitHub token not found (set {config.github.token_env})[/yellow]")
+                console.print(
+                    f"[yellow]Warning: GitHub token not found (set {config.github.token_env})[/yellow]"
+                )
             progress.remove_task(task)
-        
+
         # 5. AI analysis
-        task_label = "🤖 Generating recommendations..." if use_ai else "📊 Analyzing (rule-based)..."
+        task_label = (
+            "🤖 Generating recommendations..."
+            if use_ai
+            else "📊 Analyzing (rule-based)..."
+        )
         task = progress.add_task(task_label, total=None)
         agent = NextStepAgent(agent_name=config.default_ai_agent, use_ai=use_ai)
         recommendations = agent.analyze_and_recommend(
@@ -2034,12 +2219,12 @@ def nextstep(
             doc_status,
         )
         progress.remove_task(task)
-    
+
     console.print()
-    
+
     # Display results based on format
     report_content = None
-    
+
     if format == "json":
         formatter = JSONFormatter()
         report_content = formatter.format(
@@ -2051,7 +2236,7 @@ def nextstep(
         )
         if not save:
             console.print_json(data=report_content)
-    
+
     elif format == "markdown":
         formatter = MarkdownFormatter()
         report_content = formatter.format(
@@ -2063,8 +2248,9 @@ def nextstep(
         )
         if not save:
             from rich.markdown import Markdown
+
             console.print(Markdown(report_content))
-    
+
     else:  # rich
         _display_nextstep_report(
             recommendations,
@@ -2076,7 +2262,7 @@ def nextstep(
             config.default_ai_agent,
             agent.ai_response if show_ai_insights else None,
         )
-    
+
     # Save report if requested
     if save:
         output_path = Path(output) if output else None
@@ -2096,26 +2282,35 @@ def _display_nextstep_report(
 ):
     """Display formatted nextstep report."""
     from rich.text import Text
-    
+
     # Show which agent is being used
     if agent_name:
         agent_display = AGENT_CONFIG.get(agent_name, {}).get("name", agent_name)
         console.print(f"[dim]Analysis by:[/dim] [cyan]{agent_display}[/cyan]\n")
-    
+
     # Show AI insights if available and requested
     if ai_response:
         from rich.markdown import Markdown
+
         console.print()
-        console.print(Panel(
-            Markdown(ai_response) if not ai_response.startswith("Error:") else ai_response,
-            title="🤖 AI Insights",
-            border_style="cyan" if not ai_response.startswith("Error:") else "yellow",
-        ))
+        console.print(
+            Panel(
+                (
+                    Markdown(ai_response)
+                    if not ai_response.startswith("Error:")
+                    else ai_response
+                ),
+                title="🤖 AI Insights",
+                border_style=(
+                    "cyan" if not ai_response.startswith("Error:") else "yellow"
+                ),
+            )
+        )
         console.print()
-    
+
     # Health Score
     health = recommendations.health_score
-    
+
     if health.overall >= 80:
         score_color = "green"
         emoji = "🎉"
@@ -2128,7 +2323,7 @@ def _display_nextstep_report(
     else:
         score_color = "red"
         emoji = "🔴"
-    
+
     health_panel = Panel(
         f"[bold {score_color}]{health.overall}/100[/bold {score_color}] - {health.summary}\n\n"
         f"  • Velocity: {health.velocity_score}/100\n"
@@ -2140,33 +2335,37 @@ def _display_nextstep_report(
     )
     console.print(health_panel)
     console.print()
-    
+
     # Detailed stats if verbose
     if verbose:
         stats_table = Table(show_header=False, box=None, padding=(0, 2))
         stats_table.add_column("Metric", style="cyan")
         stats_table.add_column("Value", style="white")
-        
+
         stats_table.add_row("Files", str(code_analysis.file_count))
         stats_table.add_row("Lines of Code", f"{code_analysis.line_count:,}")
         stats_table.add_row("Python Files", str(code_analysis.python_files))
         stats_table.add_row("JavaScript Files", str(code_analysis.javascript_files))
         stats_table.add_row("TODO Markers", str(len(code_analysis.todos)))
         stats_table.add_row("FIXME Markers", str(len(code_analysis.fixmes)))
-        
+
         if test_analysis.coverage_percentage:
-            stats_table.add_row("Test Coverage", f"{test_analysis.coverage_percentage}%")
+            stats_table.add_row(
+                "Test Coverage", f"{test_analysis.coverage_percentage}%"
+            )
         stats_table.add_row("Test Files", str(test_analysis.test_count))
-        
+
         if git_analysis.is_git_repo:
             stats_table.add_row("Commits (7d)", str(git_analysis.commit_count_7d))
             stats_table.add_row("Commits (30d)", str(git_analysis.commit_count_30d))
             stats_table.add_row("Commits/Day", str(git_analysis.commits_per_day))
-        
-        stats_panel = Panel(stats_table, title="📊 Detailed Statistics", border_style="cyan")
+
+        stats_panel = Panel(
+            stats_table, title="📊 Detailed Statistics", border_style="cyan"
+        )
         console.print(stats_panel)
         console.print()
-    
+
     # Blockers
     if recommendations.blockers:
         console.print("[bold red]🔴 Blockers & Risks[/bold red]\n")
@@ -2176,19 +2375,21 @@ def _display_nextstep_report(
             if verbose and blocker.details:
                 console.print(f"    [dim]{blocker.details}[/dim]")
         console.print()
-    
+
     # Gaps
     if recommendations.gaps:
         console.print("[bold yellow]🔍 Gaps Detected[/bold yellow]\n")
         for gap in recommendations.gaps:
             severity_color = "red" if gap.severity == "high" else "yellow"
-            console.print(f"  ⚠  [{severity_color}]{gap.category}:[/{severity_color}] {gap.description}")
+            console.print(
+                f"  ⚠  [{severity_color}]{gap.category}:[/{severity_color}] {gap.description}"
+            )
         console.print()
-    
+
     # Next Steps
     if recommendations.next_steps:
         console.print("[bold cyan]💡 Recommended Next Steps[/bold cyan]\n")
-        
+
         # Group by priority
         priorities = ["NOW", "This Week", "Next Sprint"]
         for priority in priorities:
@@ -2203,19 +2404,23 @@ def _display_nextstep_report(
                 else:
                     priority_emoji = "📅"
                     priority_color = "cyan"
-                
-                console.print(f"[bold {priority_color}]{priority_emoji} {priority}:[/bold {priority_color}]")
+
+                console.print(
+                    f"[bold {priority_color}]{priority_emoji} {priority}:[/bold {priority_color}]"
+                )
                 for step in steps:
                     console.print(f"\n  {step.order}. [cyan]{step.action}[/cyan]")
                     console.print(f"     • Rationale: {step.rationale}")
                     console.print(f"     • Impact: {step.impact}")
                     console.print(f"     • Effort: {step.effort}")
                 console.print()
-    
+
     # Footer
     if not github_repo and not verbose:
         console.print("[dim]Tip: Run with --verbose for detailed statistics[/dim]")
-        console.print("[dim]Tip: Add --github-repo owner/repo --github-token $GITHUB_TOKEN for GitHub integration[/dim]")
+        console.print(
+            "[dim]Tip: Add --github-repo owner/repo --github-token $GITHUB_TOKEN for GitHub integration[/dim]"
+        )
 
 
 def main():

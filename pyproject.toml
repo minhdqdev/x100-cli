@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "x100-cli"
-version = "0.1.1"
+version = "0.1.2"
 description = "Create high-grade software at speed with AI agent"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -30,6 +30,13 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+x100_cli = [
+    "convert/*.json",
+    "templates/**/*",
+    "templates/**/*.md",
+]
 
 [dependency-groups]
 dev = [

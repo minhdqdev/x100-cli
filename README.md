@@ -303,9 +303,18 @@ x100 nextstep
 x100 nextstep --verbose
 x100 nextstep --github-repo owner/repo --github-token $GITHUB_TOKEN
 
+# Convert user stories to GitHub issues
+x100 convert issue docs/user_stories/US-001-news-ingestion.md
+x100 convert issue docs/user_stories                          # Batch convert directory
+x100 convert issue docs/user_stories --agent claude           # Use specific AI agent
+
 # Manage AI agents
 x100 agent list                    # List registered agents
 x100 agent switch-default          # Change default AI agent (interactive)
+
+# Manage GitHub project integration
+x100 project set-url https://github.com/orgs/ORG/projects/NUM  # Link to GitHub project
+x100 project info                                               # View project info
 
 # Check tool installation
 x100 check
@@ -316,6 +325,96 @@ x100 status
 # Show version information
 x100 version
 ```
+
+### User Story to GitHub Issue Conversion
+
+x100 can automatically convert user story markdown files to GitHub issues using AI:
+
+**Prerequisites:**
+- GitHub CLI (`gh`) installed and authenticated
+- User story files following the naming pattern: `US-[number]-[slug].md`
+- Project configured with GitHub repository (optional but recommended)
+
+**Usage:**
+
+```bash
+# Convert a single user story file
+x100 convert issue docs/user_stories/US-001-news-ingestion-pipeline.md
+
+# Convert all user stories in a directory
+x100 convert issue docs/user_stories
+
+# Use a specific AI agent for conversion
+x100 convert issue docs/user_stories --agent claude
+```
+
+**How it works:**
+
+1. **File Discovery**: Finds all files matching pattern `US-[number]-[slug].md`
+2. **AI Conversion**: Uses your default AI agent (CLI-based) to convert markdown to structured JSON
+3. **Issue Creation**: Creates GitHub issues via `gh` CLI with proper title, body, labels, etc.
+4. **Project Linking**: Automatically links issues to GitHub project if configured
+5. **Result Summary**: Shows success/failure for each conversion
+6. **Cleanup Prompt**: Optionally delete successfully converted files
+
+**Configuration:**
+
+To link issues to a GitHub project, set up your project configuration:
+
+```bash
+# Set GitHub project URL
+x100 project set-url https://github.com/orgs/YOUR_ORG/projects/123
+
+# Verify configuration
+x100 project info
+```
+
+The `.x100/config.json` should contain:
+
+```json
+{
+  "project": {
+    "type": "github_project",
+    "url": "https://github.com/orgs/YOUR_ORG/projects/123",
+    "id": "123"
+  },
+  "default_agent": "claude"
+}
+```
+
+**Example Output:**
+
+```
+Found 3 user story file(s) to convert
+
+Converting US-001-news-ingestion.md...
+Creating issue for US-001-news-ingestion.md...
+
+🎉 Conversion Summary
+Converted: 3/3 user stories
+Succeeded: 3
+Failed: 0
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ File                          ┃ Status    ┃ Details                       ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ US-001-news-ingestion.md      │ ✓ Success │ https://github.com/...        │
+│ US-002-user-auth.md           │ ✓ Success │ https://github.com/...        │
+│ US-003-api-integration.md     │ ✓ Success │ https://github.com/...        │
+└───────────────────────────────┴───────────┴───────────────────────────────┘
+
+3 file(s) were successfully converted to GitHub issues.
+You can now safely delete these user story files if desired.
+
+Delete successfully converted files? [y/N]:
+```
+
+**Supported AI Agents:**
+
+Only CLI-based agents can be used for conversion:
+- `claude`, `gemini`, `qwen`, `opencode`, `codex`, `auggie`, `codebuddy`, `amp`, `shai`, `q`
+
+IDE-based agents (copilot, cursor-agent, windsurf, kilocode, roo, bob) cannot be used for command-line conversion.
 
 ### Additional Options
 

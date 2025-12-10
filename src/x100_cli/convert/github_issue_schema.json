@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GitHub Issue Schema",
+  "description": "Schema for converting user stories to GitHub issues",
+  "type": "object",
+  "required": ["title", "body"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "The title of the GitHub issue",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "body": {
+      "type": "string",
+      "description": "The body/description of the issue in markdown format"
+    },
+    "labels": {
+      "type": "array",
+      "description": "Labels to apply to the issue. Only use these standard labels: enhancement, bug, documentation, duplicate, good first issue, help wanted, invalid, question, wontfix",
+      "items": {
+        "type": "string",
+        "enum": [
+          "enhancement",
+          "bug",
+          "documentation",
+          "duplicate",
+          "good first issue",
+          "help wanted",
+          "invalid",
+          "question",
+          "wontfix"
+        ]
+      },
+      "default": []
+    },
+    "issue_type": {
+      "type": "string",
+      "description": "The type of issue: Bug, Feature, or Task",
+      "enum": ["Bug", "Feature", "Task"],
+      "default": "Task"
+    },
+    "assignees": {
+      "type": "array",
+      "description": "GitHub usernames to assign to the issue",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "milestone": {
+      "type": "integer",
+      "description": "Milestone number to add the issue to",
+      "nullable": true
+    },
+    "project_id": {
+      "type": "integer",
+      "description": "GitHub project ID to link the issue to (if available)",
+      "nullable": true
+    }
+  },
+  "examples": [
+    {
+      "title": "Implement news ingestion pipeline",
+      "body": "## User Story\n\nAs a content editor, I want to ingest news articles from multiple sources so that I can manage and publish content efficiently.\n\n## Acceptance Criteria\n\n- [ ] Support RSS feed ingestion\n- [ ] Support API-based ingestion\n- [ ] Store articles in database\n- [ ] Handle duplicate detection\n\n## Technical Notes\n\n- Use Celery for async processing\n- Implement rate limiting\n- Add monitoring and logging",
+      "labels": ["enhancement"],
+      "issue_type": "Feature",
+      "assignees": ["developer1"],
+      "milestone": 1
+    }
+  ]
+}
